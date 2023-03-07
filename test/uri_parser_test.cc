@@ -19,6 +19,15 @@ void test_base() {
   std::cout << uri.path << std::endl;
   std::cout << uri.query << std::endl;
   std::cout << uri.fragment << std::endl;
+
+  parse("ldap://user@[2001:db8::7]:12345/c=GB?objectClass?one", uri);
+  std::cout << uri.scheme << std::endl;
+  std::cout << uri.userinfo << std::endl;
+  std::cout << uri.host << std::endl;
+  std::cout << uri.port << std::endl;
+  std::cout << uri.path << std::endl;
+  std::cout << uri.query << std::endl;
+  std::cout << uri.fragment << std::endl;
 }
 
 int main(int argc, char **argv) {
