@@ -1,5 +1,5 @@
 set_project("domino")
-set_languages("c++17")
+set_languages("c11", "c++17")
 set_warnings("allextra")
 
 set_config("cc", "clang")
