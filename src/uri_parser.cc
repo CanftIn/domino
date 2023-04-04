@@ -1,5 +1,6 @@
 #include "uri_parser.h"
 
+#include <cstring>
 #include <sstream>
 #include <vector>
 

@@ -8,12 +8,14 @@ set_config("ld", "clang++")
 
 add_rules("mode.debug", "mode.release")
 
-add_includedirs("./src")
-
 add_requires("gtest")
+
+add_includedirs("./src")
+add_includedirs("./src/support")
 
 target("domino")
     set_kind("static")
     add_files("./src/*.cc")
+    add_files("./src/support/*.cc")
 
 add_subdirs('test')
