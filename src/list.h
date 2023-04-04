@@ -102,5 +102,10 @@ static inline void list_splice_init(struct list_head *list,
     &pos->member != (head); \
     pos = list_entry(pos->member.next, typeof(*pos), member))
 
+struct slist_node {
+  struct slist_node *next;
+};
+
+
 
 #endif  // DOMINO_LIST_H_
