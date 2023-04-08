@@ -12,10 +12,12 @@ add_requires("gtest")
 
 add_includedirs("./src")
 add_includedirs("./src/support")
+add_includedirs("./src/util")
 
 target("domino")
     set_kind("static")
     add_files("./src/*.cc")
     add_files("./src/support/*.cc")
+    add_files("./src/util/*.cc")
 
 add_subdirs('test')

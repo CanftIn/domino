@@ -11,3 +11,7 @@ target("uri_parser_test")
 target("type_traits_test")
   set_kind("binary")
   add_files("type_traits_test.cc")
+
+target("small_vector_test")
+  set_kind("binary")
+  add_files("small_vector_test.cc")
