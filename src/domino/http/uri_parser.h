@@ -1,5 +1,5 @@
-#ifndef DOMINO_URI_PARSER_H_
-#define DOMINO_URI_PARSER_H_
+#ifndef DOMINO_HTTP_URI_PARSER_H_
+#define DOMINO_HTTP_URI_PARSER_H_
 
 #include <stdint.h>
 
@@ -99,4 +99,4 @@ class URIParser {
 }  // namespace http
 }  // namespace domino
 
-#endif  // DOMINO_URI_PARSER_H_
+#endif  // DOMINO_HTTP_URI_PARSER_H_

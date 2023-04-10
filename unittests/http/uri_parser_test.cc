@@ -1,4 +1,6 @@
-#include "domino/http/uri_parser.h"
+#include <domino/http/uri_parser.h>
+
+#include <gtest/gtest.h>
 
 #include <iostream>
 #include <string>
@@ -6,7 +8,7 @@
 #include <typeinfo>
 #include <vector>
 
-void test_base() {
+TEST(URIParser, Base) {
   using namespace domino::http;
 
   URIParser uri;
@@ -31,9 +33,4 @@ void test_base() {
   std::cout << uri.path << std::endl;
   std::cout << uri.query << std::endl;
   std::cout << uri.fragment << std::endl;
-}
-
-int main(int argc, char **argv) {
-  test_base();
-  return 0;
 }
