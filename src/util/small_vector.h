@@ -148,6 +148,106 @@ class SmallVectorTemplateCommon
     this->assertSafeToAdd(From, To - From);
     this->assertSafeToAdd(To - 1, To - From);
   }
+
+  template <class ItTy,
+            std::enable_if_t<!std::is_same<std::remove_const_t<ItTy>, T*>::value,
+                             bool> = false>
+  void assertSafeToAddRange(ItTy, ItTy) {}
+
+ public:
+  using size_type = size_t;
+  using difference_type = ptrdiff_t;
+  using value_type = T;
+  using iterator = T*;
+  using const_iterator = const T*;
+
+  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+  using reverse_iterator = std::reverse_iterator<iterator>;
+
+  using reference = T&;
+  using const_reference = const T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+
+  using Base::capacity;
+  using Base::empty;
+  using Base::size;
+
+  iterator begin() {
+    return (iterator)this->BeginX;
+  }
+
+  const_iterator begin() const {
+    return (const_iterator)this->BeginX;
+  }
+
+  iterator end() {
+    return begin() + size();
+  }
+
+  const_iterator end() const {
+    return begin() + size();
+  }
+
+  reverse_iterator rbegin() {
+    return reverse_iterator(end());
+  }
+
+  const_reverse_iterator rbegin() const {
+    return const_reverse_iterator(end());
+  }
+
+  reverse_iterator rend() {
+    return reverse_iterator(begin());
+  }
+
+  const_reverse_iterator rend() const {
+    return const_reverse_iterator(begin());
+  }
+
+  size_type size_in_bytes() const {
+    return size() * sizeof(T);
+  }
+
+  size_type max_size() const {
+    return std::min(this->SizeTypeMax(), size_type(-1) / sizeof(T));
+  }
+
+  size_t capacity_in_bytes() const {
+    return capacity() * sizeof(T);
+  }
+
+  pointer data() {
+    return pointer(begin());
+  }
+
+  const_pointer data() const {
+    return const_pointer(begin());
+  }
+
+  reference at(size_type idx) {
+    assert(idx < size());
+    return begin()[idx];
+  }
+
+  const_reference at(size_type idx) const {
+    assert(idx < size());
+    return begin()[idx];
+  }
+
+  reference operator[](size_type idx) {
+    assert(idx < size());
+    return begin()[idx];
+  }
+
+  const_reference operator[](size_type idx) const {
+    assert(idx < size());
+    return begin()[idx];
+  }
+
+  reference operator[](size_type idx) {
+    assert()
+  }
 };
 
 }  // namespace domino
