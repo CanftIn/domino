@@ -1,17 +1,20 @@
+#include "domino/http/uri_parser.h"
+
 #include <iostream>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
 #include <vector>
 
-#include "uri_parser.h"
-
 void test_base() {
   using namespace domino::http;
-  
+
   URIParser uri;
 
-  parse("https://john.doe:pass@www.example.com:123/forum/questions/?tag=networking&order=newest#top", uri);
+  parse(
+      "https://john.doe:pass@www.example.com:123/forum/questions/"
+      "?tag=networking&order=newest#top",
+      uri);
   std::cout << uri.scheme << std::endl;
   std::cout << uri.userinfo << std::endl;
   std::cout << uri.host << std::endl;
