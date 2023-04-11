@@ -35,7 +35,7 @@ class SmallVectorBase {
   SmallVectorBase(void* FirstEl, size_t TotalCapacity)
       : BeginX(FirstEl), Capacity(TotalCapacity) {}
 
-  void mallocForGrow(size_t MinSize, size_t TSize, size_t& NewCapacity);
+  void* mallocForGrow(size_t MinSize, size_t TSize, size_t& NewCapacity);
 
   void growPod(void* FirstEl, size_t MinSize, size_t TSize);
 
@@ -296,7 +296,7 @@ class SmallVectorTemplateBase : public SmallVectorTemplateCommon<T> {
   /// Copy the range [I, E) onto the uninitialized memory starting with "Dest",
   /// constructing elements as needed.
   template <typename It1, typename It2>
-  static void uninitialized_copy(It1 I, It2 E, It2 Dest) {
+  static void uninitialized_copy(It1 I, It1 E, It2 Dest) {
     std::uninitialized_copy(I, E, Dest);
   }
 
@@ -335,7 +335,7 @@ class SmallVectorTemplateBase : public SmallVectorTemplateCommon<T> {
     size_t NewCapacity = 0;
     T* NewElts = mallocForGrow(NumElts, NewCapacity);
     std::uninitialized_fill_n(NewElts, NumElts, Elt);
-    this->destory_range(this->begin(), this->end());
+    this->destroy_range(this->begin(), this->end());
     takeAllocationForGrow(NewElts, NewCapacity);
     this->set_size(NumElts);
   }
@@ -382,7 +382,7 @@ template <typename T, bool TriviallyCopyable>
 void SmallVectorTemplateBase<T, TriviallyCopyable>::moveElementsForGrow(
     T* NewElts) {
   this->uninitialized_move(this->begin(), this->end(), NewElts);
-  destory_range(this->begin(), this->end());
+  destroy_range(this->begin(), this->end());
 }
 
 template <typename T, bool TriviallyCopyable>
@@ -410,18 +410,18 @@ class SmallVectorTemplateBase<T, true> : public SmallVectorTemplateCommon<T> {
   static void destroy_range(T*, T*) {}
 
   template <typename It1, typename It2>
-  static void uninitialized_move(It1 I, It2 E, It2 Dest) {
+  static void uninitialized_move(It1 I, It1 E, It2 Dest) {
     uninitialized_copy(I, E, Dest);
   }
 
   template <typename It1, typename It2>
-  static void uninitialized_copy(It1 I, It2 E, It2 Dest) {
+  static void uninitialized_copy(It1 I, It1 E, It2 Dest) {
     std::uninitialized_copy(I, E, Dest);
   }
 
   template <typename T1, typename T2>
   static void uninitialized_copy(
-      T1* I, T2* E, T2* Dest,
+      T1* I, T1* E, T2* Dest,
       std::enable_if_t<std::is_same<typename std::remove_const<T1>::type,
                                     T2>::value>* = nullptr) {
     if (I != E) memcpy(reinterpret_cast<void*>(Dest), I, (E - I) * sizeof(T));
@@ -693,7 +693,7 @@ class SmallVectorImpl : public SmallVectorTemplateBase<T> {
     T* OldEnd = this->end();
     this->set_size(this->size() + NumToInsert);
     size_t NumOverwritten = OldEnd - I;
-    this->unitialized_move(I, OldEnd, this->end() - NumOverwritten);
+    this->uninitialized_move(I, OldEnd, this->end() - NumOverwritten);
 
     if (!TakesParamByValue && I <= EltPtr && EltPtr < this->end())
       EltPtr += NumToInsert;
@@ -820,15 +820,153 @@ class SmallVector : public SmallVectorImpl<T>, SmallVectorStorage<T, N> {
 
   template <typename ItTy,
             typename = std::enable_if_t<std::is_convertible<
-              typename std::iterator_traits<ItTy>::iterator_category,
-              std::input_iterator_tag>::value>>
+                typename std::iterator_traits<ItTy>::iterator_category,
+                std::input_iterator_tag>::value>>
   SmallVector(ItTy S, ItTy E) : SmallVectorImpl<T>(N) {
     this->append(S, E);
   }
 
-  
+  template <
+      typename Container,
+      std::enable_if_t<
+          std::is_convertible<typename std::iterator_traits<
+                                  decltype(std::declval<Container>()
+                                               .begin())>::iterator_category,
+                              std::input_iterator_tag>::value &&
+              std::is_convertible<typename std::iterator_traits<
+                                      decltype(std::declval<Container>()
+                                                   .end())>::iterator_category,
+                                  std::input_iterator_tag>::value,
+          int> = 0>
+  explicit SmallVector(Container&& c) : SmallVectorImpl<T>(N) {
+    this->append(c.begin(), c.end());
+  }
+
+  SmallVector(std::initializer_list<T> IL) : SmallVectorImpl<T>(N) {
+    this->assign(IL);
+  }
+
+  SmallVector(const SmallVector& RHS) : SmallVectorImpl<T>(N) {
+    if (!RHS.empty()) SmallVectorImpl<T>::operator=(RHS);
+  }
+
+  SmallVector& operator=(const SmallVector& RHS) {
+    SmallVectorImpl<T>::operator=(RHS);
+    return *this;
+  }
+
+  SmallVector(SmallVector&& RHS) : SmallVectorImpl<T>(N) {
+    if (!RHS.empty()) SmallVectorImpl<T>::operator=(::std::move(RHS));
+  }
+
+  template <
+      typename Container,
+      std::enable_if_t<
+          std::is_convertible<typename std::iterator_traits<
+                                  decltype(std::declval<Container>()
+                                               .begin())>::iterator_category,
+                              std::input_iterator_tag>::value &&
+              std::is_convertible<typename std::iterator_traits<
+                                      decltype(std::declval<Container>()
+                                                   .end())>::iterator_category,
+                                  std::input_iterator_tag>::value,
+          int> = 0>
+  const SmallVector& operator=(const Container& RHS) {
+    this->assign(RHS.begin(), RHS.end());
+    return *this;
+  }
+
+  SmallVector(SmallVectorImpl<T>&& RHS) : SmallVectorImpl<T>(N) {
+    if (!RHS.empty()) SmallVectorImpl<T>::operator=(::std::move(RHS));
+  }
+
+  SmallVector& operator=(SmallVector&& RHS) {
+    SmallVectorImpl<T>::operator=(::std::move(RHS));
+    return *this;
+  }
+
+  SmallVector& operator=(SmallVectorImpl<T>&& RHS) {
+    SmallVectorImpl<T>::operator=(::std::move(RHS));
+    return *this;
+  }
+
+  template <
+      typename Container,
+      std::enable_if_t<
+          std::is_convertible<typename std::iterator_traits<
+                                  decltype(std::declval<Container>()
+                                               .begin())>::iterator_category,
+                              std::input_iterator_tag>::value &&
+              std::is_convertible<typename std::iterator_traits<
+                                      decltype(std::declval<Container>()
+                                                   .end())>::iterator_category,
+                                  std::input_iterator_tag>::value,
+          int> = 0>
+  const SmallVector& operator=(Container&& C) {
+    this->assign(C.begin(), C.end());
+    return *this;
+  }
+
+  SmallVector& operator=(std::initializer_list<T> IL) {
+    this->assign(IL);
+    return *this;
+  }
 };
 
+template <typename T, unsigned N>
+inline size_t capacity_in_bytes(const SmallVector<T, N>& X) {
+  return X.capacity_in_bytes();
+}
+
+template <typename T, unsigned N>
+std::ostream& operator<<(std::ostream& out, const SmallVector<T, N>& list) {
+  int i = 0;
+  out << "[";
+  for (auto e : list) {
+    if (i++ > 0) out << ", ";
+    out << e;
+  }
+  out << "]";
+  return out;
+}
+
+template <typename RangeType>
+using ValueTypeFromRangeType =
+    typename std::remove_const<typename std::remove_reference<
+        decltype(*std::begin(std::declval<RangeType&>()))>::type>::type;
+
+/// Given a range of type R, iterate the entire range and return a
+/// SmallVector with elements of the vector.  This is useful, for example,
+/// when you want to iterate a range and then sort the results.
+template <unsigned Size, typename R>
+SmallVector<ValueTypeFromRangeType<R>, Size> to_vector(R&& Range) {
+  return {std::begin(Range), std::end(Range)};
+}
+
+template <typename R>
+SmallVector<ValueTypeFromRangeType<R>,
+            CalculateSmallVectorDefaultInlinedElements<
+                ValueTypeFromRangeType<R>>::value>
+to_vector(R&& Range) {
+  return {std::begin(Range), std::end(Range)};
+}
+
 }  // namespace domino
+
+namespace std {
+
+/// Implement std::swap in terms of SmallVector swap.
+template <typename T>
+inline void swap(domino::SmallVectorImpl<T>& LHS, domino::SmallVectorImpl<T>& RHS) {
+  LHS.swap(RHS);
+}
+
+/// Implement std::swap in terms of SmallVector swap.
+template <typename T, unsigned N>
+inline void swap(domino::SmallVector<T, N>& LHS, domino::SmallVector<T, N>& RHS) {
+  LHS.swap(RHS);
+}
+
+}  // namespace std
 
 #endif  // DOMINO_UTIL_SMALL_VECTOR_H_

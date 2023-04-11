@@ -1,4 +1,4 @@
-#include <domino/util/small_vector.h>
+#include "small_vector.h"
 
 #include <cstdlib>
 #include <limits>
@@ -38,7 +38,7 @@ static size_t getNewCapacity(size_t MinSize, size_t TSize, size_t OldCapacity) {
 }
 
 template <class Size_T>
-void SmallVectorBase<Size_T>::mallocForGrow(size_t MinSize, size_t TSize,
+void* SmallVectorBase<Size_T>::mallocForGrow(size_t MinSize, size_t TSize,
                                             size_t& NewCapacity) {
   NewCapacity = getNewCapacity<Size_T>(MinSize, TSize, this->capacity());
   auto Result = std::malloc(NewCapacity * TSize);
