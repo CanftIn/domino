@@ -38,3 +38,4 @@
 build
 compile_commands.json
 fuck
+build_cmake
