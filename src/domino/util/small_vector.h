@@ -1,6 +1,8 @@
 #ifndef DOMINO_UTIL_SMALL_VECTOR_H_
 #define DOMINO_UTIL_SMALL_VECTOR_H_
 
+#include <sys/types.h>
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -559,12 +561,269 @@ class SmallVectorImpl : public SmallVectorTemplateBase<T> {
     this->set_size(this->size() + NumInputs);
   }
 
-  void append(std::initializer_list<T> IL) {
-    append(IL.begin(), IL.end());
+  void append(std::initializer_list<T> IL) { append(IL.begin(), IL.end()); }
+
+  void append(const SmallVectorImpl& RHS) { append(RHS.begin(), RHS.end()); }
+
+  void assign(size_type NumElts, ValueParamT Elt) {
+    if (NumElts > this->capacity()) {
+      this->growAndAssign(NumElts, Elt);
+      return;
+    }
+    std::fill_n(this->begin(), std::min(NumElts, this->size()), Elt);
+    if (NumElts > this->size())
+      std::uninitialized_fill_n(this->end(), NumElts - this->size(), Elt);
+    else if (NumElts < this->size())
+      this->destroy_range(this->begin() + NumElts, this->end());
+    this->set_size(NumElts);
   }
 
-  void append(const SmallVectorImpl& RHS) {
-    append(RHS.begin(), RHS.end());
+  template <typename in_iter,
+            typename = std::enable_if_t<std::is_convertible<
+                typename std::iterator_traits<in_iter>::iterator_category,
+                std::input_iterator_tag>::value>>
+  void assign(in_iter in_start, in_iter in_end) {
+    this->assertSafeToReferenceAfterClear(in_start, in_end);
+    clear();
+    append(in_start, in_end);
+  }
+
+  void assign(std::initializer_list<T> IL) {
+    clear();
+    append(IL);
+  }
+
+  void assign(const SmallVectorImpl& RHS) { assign(RHS.begin(), RHS.end()); }
+
+  iterator erase(const_iterator CI) {
+    iterator I = const_cast<iterator>(CI);
+
+    assert(this->isReferenceToStorage(CI) &&
+           "Iterator to erase is out of bounds.");
+
+    iterator N = I;
+    std::move(I + 1, this->end(), I);
+    this->pop_back();
+    return (N);
+  }
+
+  iterator erase(const_iterator CS, const_iterator CE) {
+    iterator S = const_cast<iterator>(CS);
+    iterator E = const_cast<iterator>(CE);
+
+    assert(this->isRangeInStorage(S, E) && "Range to erase is out of bounds.");
+
+    iterator N = S;
+    iterator I = std::move(E, this->end(), S);
+    this->destroy_range(I, this->end());
+    this->set_size(I - this->begin());
+    return (N);
+  }
+
+ private:
+  template <class ArgType>
+  iterator insert_one_impl(iterator I, ArgType&& Elt) {
+    static_assert(
+        std::is_same<std::remove_const_t<std::remove_reference_t<ArgType>>,
+                     T>::value,
+        "ArgType must be derived from T!");
+    if (I == this->end()) {
+      this->push_back(::std::forward<ArgType>(Elt));
+      return this->end() - 1;
+    }
+
+    assert(this->isReferenceToStorage(I) &&
+           "Insertion iterator is out of bounds.");
+
+    size_t Index = I - this->begin();
+    std::remove_reference_t<ArgType>* EltPtr =
+        this->reserveForParamAndGetAddress(Elt);
+    I = this->begin() + Index;
+
+    ::new ((void*)this->end()) T(::std::move(this->back()));
+
+    std::move_backward(I, this->end() - 1, this->end());
+    this->set_size(this->size() + 1);
+
+    static_assert(!TakesParamByValue || std::is_same<ArgType, T>::value,
+                  "ArgType must be 'T' when taking by value!");
+    if (!TakesParamByValue && this->isReferenceToRange(EltPtr, I, this->end()))
+      ++EltPtr;
+
+    *I = ::std::forward<ArgType>(*EltPtr);
+    return I;
+  }
+
+ public:
+  iterator insert(iterator I, T&& Elt) {
+    return insert_one_impl(I, this->forward_value_param(std::move(Elt)));
+  }
+
+  iterator insert(iterator I, const T& Elt) {
+    return insert_one_impl(I, this->forward_value_param(Elt));
+  }
+
+  iterator insert(iterator I, size_type NumToInsert, ValueParamT Elt) {
+    size_t InsertElt = I - this->begin();
+
+    if (I == this->end()) {
+      append(NumToInsert, Elt);
+      return this->begin() + InsertElt;
+    }
+
+    assert(this->isReferenceToStorage(I) &&
+           "Insertion iterator is out of bounds.");
+
+    const T* EltPtr = this->reserveForParamAndGetAddress(Elt, NumToInsert);
+    I = this->begin() + InsertElt;
+
+    if (size_t(this->end() - I) >= NumToInsert) {
+      T* OldEnd = this->end();
+      append(std::move_iterator<iterator>(this->end() - NumToInsert),
+             std::move_iterator<iterator>(this->end()));
+      std::move_backward(I, OldEnd - NumToInsert, OldEnd);
+
+      if (!TakesParamByValue && I <= EltPtr && EltPtr < this->end())
+        EltPtr += NumToInsert;
+
+      std::fill_n(I, NumToInsert, *EltPtr);
+      return I;
+    }
+
+    T* OldEnd = this->end();
+    this->set_size(this->size() + NumToInsert);
+    size_t NumOverwritten = OldEnd - I;
+    this->unitialized_move(I, OldEnd, this->end() - NumOverwritten);
+
+    if (!TakesParamByValue && I <= EltPtr && EltPtr < this->end())
+      EltPtr += NumToInsert;
+
+    std::fill_n(I, NumOverwritten, *EltPtr);
+    std::uninitialized_fill_n(OldEnd, NumToInsert - NumOverwritten, *EltPtr);
+    return I;
+  }
+
+  template <typename ItTy,
+            typename = std::enable_if_t<std::is_convertible<
+                typename std::iterator_traits<ItTy>::iterator_category,
+                std::input_iterator_tag>::value>>
+  iterator insert(iterator I, ItTy From, ItTy To) {
+    size_t InsertElt = I - this->begin();
+
+    if (I == this->end()) {
+      append(From, To);
+      return this->begin() + InsertElt;
+    }
+
+    assert(this->isReferenceToStorage(I) &&
+           "Insertion iterator is out of bounds.");
+
+    this->assertSafeToAddRange(From, To);
+    size_t NumToInsert = std::distance(From, To);
+    reserve(this->size() + NumToInsert);
+    I = this->begin() + InsertElt;
+
+    if (size_t(this->end() - I) >= NumToInsert) {
+      T* OldEnd = this->end();
+      append(std::move_iterator<iterator>(this->end() - NumToInsert),
+             std::move_iterator<iterator>(this->end()));
+      std::move_backward(I, OldEnd - NumToInsert, OldEnd);
+      std::copy(From, To, I);
+      return I;
+    }
+
+    T* OldEnd = this->end();
+    this->set_size(this->size() + NumToInsert);
+    size_t NumOverwritten = OldEnd - I;
+    this->uninitialized_move(I, OldEnd, this->end() - NumOverwritten);
+
+    for (T* J = I; NumOverwritten > 0; --NumOverwritten) {
+      *J = *From;
+      ++J;
+      ++From;
+    }
+
+    this->uninitialized_copy(From, To, OldEnd);
+    return I;
+  }
+
+  void insert(iterator I, std::initializer_list<T> IL) {
+    insert(I, IL.begin(), IL.end());
+  }
+
+  template <typename... ArgTypes>
+  reference emplace_back(ArgTypes&&... Args) {
+    if (DOMINO_UNLIKELY(this->size() >= this->capacity()))
+      return this->growAndEmplaceBack(std::forward<ArgTypes>(Args)...);
+
+    ::new ((void*)this->end()) T(std::forward<ArgTypes>(Args)...);
+    this->set_size(this->size() + 1);
+    return this->back();
+  }
+
+  SmallVectorImpl& operator=(const SmallVectorImpl& RHS);
+
+  SmallVectorImpl& operator=(SmallVectorImpl&& RHS);
+
+  bool operator==(const SmallVectorImpl& RHS) const {
+    if (this->size() != RHS.size()) return false;
+    return std::equal(this->begin(), this->end(), RHS.begin());
+  }
+
+  bool operator!=(const SmallVectorImpl& RHS) const { return !(*this == RHS); }
+
+  bool operator<(const SmallVectorImpl& RHS) const {
+    return std::lexicographical_compare(this->begin(), this->end(), RHS.begin(),
+                                        RHS.end());
+  }
+};
+
+template <typename T, unsigned N>
+struct SmallVectorStorage {
+  alignas(T) char InlineElts[N * sizeof(T)];
+};
+
+template <typename T>
+struct alignas(T) SmallVectorStorage<T, 0> {};
+
+template <typename T, unsigned N>
+class SmallVector;
+
+template <typename T>
+struct CalculateSmallVectorDefaultInlinedElements {
+  static constexpr size_t kPreferredSmallVectorSizeof = 64;
+  static_assert(
+      sizeof(T) <= 256,
+      "You are trying to use a default number of inlined elements for "
+      "`SmallVector<T>` but `sizeof(T)` is really big! Please use an "
+      "explicit number of inlined elements with `SmallVector<T, N>` to make "
+      "sure you really want that much inline storage.");
+  static constexpr size_t PreferredInlineBytes =
+      kPreferredSmallVectorSizeof - sizeof(SmallVector<T, 0>);
+  static constexpr size_t NumElementsThatFit = PreferredInlineBytes / sizeof(T);
+  static constexpr size_t value =
+      NumElementsThatFit == 0 ? 1 : NumElementsThatFit;
+};
+
+template <typename T,
+          unsigned N = CalculateSmallVectorDefaultInlinedElements<T>::value>
+class SmallVector : public SmallVectorImpl<T>, SmallVectorStorage<T, N> {
+ public:
+  SmallVector() : SmallVectorImpl<T>(N) {}
+
+  ~SmallVector() { this->destroy_range(this->begin(), this->end()); }
+
+  explicit SmallVector(size_t Size, const T& Value = T())
+      : SmallVectorImpl<T>(N) {
+    this->assign(Size, Value);
+  }
+
+  template <typename ItTy,
+            typename = std::enable_if_t<std::is_convertible<
+              typename std::iterator_traits<ItTy>::iterator_category,
+              std::input_iterator_tag>::value>>
+  SmallVector(ItTy S, ItTy E) : SmallVectorImpl<T>(N) {
+    this->append(S, E);
   }
 
   
