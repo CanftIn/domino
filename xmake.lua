@@ -22,4 +22,4 @@ set_config("ld", "clang++")
 add_cflags("-fPIC", "-pipe")
 add_cxxflags("-fPIC", "-pipe", "-Wno-invalid-offsetof")
 
-includes("src", "unittests")
+includes("**/xmake.lua")

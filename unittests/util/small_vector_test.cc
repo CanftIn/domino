@@ -4,10 +4,10 @@
 
 #include <list>
 
+//namespace unittests {
+
 using domino::SmallVector;
 using domino::SmallVectorImpl;
-
-namespace {
 
 /// A helper class that counts the total number of constructor and
 /// destructor calls.
@@ -1358,4 +1358,4 @@ TYPED_TEST(SmallVectorInternalReferenceInvalidationTest, EmplaceBack) {
   EXPECT_EQ(int(V.size()) - 1, V.back().second);
 }
 
-}  // end namespace
+//}  // namespace unittests

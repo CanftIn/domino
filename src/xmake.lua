@@ -1,5 +1,3 @@
-includes("**/xmake.lua")
-
 add_includedirs(".")
 
 target("domino")
