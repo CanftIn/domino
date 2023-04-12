@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <domino/meta/detail/integer_sequence.hpp>
+#include <domino/meta/integer_sequence.hpp>
 
 using namespace domino::meta;
 
