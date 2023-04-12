@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.6)
 set(UNITTESTS_LIST
   "integer_sequence_test"
   "fold_test"
+  "meta_quote_test"
+  "append_test"
+  "list_c_test"
 )
 
 foreach(src ${UNITTESTS_LIST})
