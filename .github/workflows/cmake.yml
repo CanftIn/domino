@@ -1,0 +1,78 @@
+name: ci build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  ubuntu_build:
+    name: ubuntu_build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: setup
+        run: |
+         sudo apt-get update
+         sudo apt-get install cmake g++ clang libgtest-dev make valgrind
+      - uses: actions/checkout@v3
+      - name: Generate makefile using CMake
+        run: |
+          mkdir cmake_build
+          cd cmake_build
+          cmake ..
+      - name: Run make
+        run: |
+          cd cmake_build
+          make -j$(nproc)
+      - name: Run unittests
+        run: |
+          cd cmake_build
+          ctest -j$(nproc)
+
+  container_build:
+    name: container_build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup Podman
+        run: |
+          sudo apt update
+          sudo apt-get -y install podman
+          podman pull fedora:rawhide
+      - name: Get source
+        uses: actions/checkout@v3
+        with:
+          path: 'domino'
+      - name: Create container and run unittests
+        run: |
+          {
+              echo "FROM fedora:rawhide"
+              echo "RUN dnf -y update"
+              echo "RUN dnf -y install cmake clang gcc-c++ gtest-devel make valgrind"
+              echo "RUN dnf clean all"
+              echo "COPY domino domino"
+              echo "WORKDIR /domino"
+              echo "RUN mkdir build && cd build && cmake .. && make -j$(nproc) && ctest -j$(nproc)" 
+          } > podmanfile
+          podman build --tag fedorarawhide -f ./podmanfile
+
+  xmake_build:
+    name: xmake_build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install cmake g++ clang libgtest-dev make valgrind
+    - name: setup xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: latest
+    - name: pull code
+      uses: actions/checkout@v2
+    - name: xmake build
+      run: |
+        xmake b
