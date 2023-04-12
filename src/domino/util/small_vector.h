@@ -1,6 +1,8 @@
 #ifndef DOMINO_UTIL_SMALL_VECTOR_H_
 #define DOMINO_UTIL_SMALL_VECTOR_H_
 
+#include <domino/util/macros.h>
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -15,8 +17,6 @@
 #include <ostream>
 #include <type_traits>
 #include <utility>
-
-#include "macros.h"
 
 namespace domino {
 
@@ -83,7 +83,7 @@ static size_t getNewCapacity(size_t MinSize, size_t TSize, size_t OldCapacity) {
 
 template <class Size_T>
 void* SmallVectorBase<Size_T>::mallocForGrow(size_t MinSize, size_t TSize,
-                                            size_t& NewCapacity) {
+                                             size_t& NewCapacity) {
   NewCapacity = getNewCapacity<Size_T>(MinSize, TSize, this->capacity());
   auto Result = std::malloc(NewCapacity * TSize);
   if (Result == nullptr) throw std::bad_alloc();
@@ -1119,13 +1119,15 @@ namespace std {
 
 /// Implement std::swap in terms of SmallVector swap.
 template <typename T>
-inline void swap(domino::SmallVectorImpl<T>& LHS, domino::SmallVectorImpl<T>& RHS) {
+inline void swap(domino::SmallVectorImpl<T>& LHS,
+                 domino::SmallVectorImpl<T>& RHS) {
   LHS.swap(RHS);
 }
 
 /// Implement std::swap in terms of SmallVector swap.
 template <typename T, unsigned N>
-inline void swap(domino::SmallVector<T, N>& LHS, domino::SmallVector<T, N>& RHS) {
+inline void swap(domino::SmallVector<T, N>& LHS,
+                 domino::SmallVector<T, N>& RHS) {
   LHS.swap(RHS);
 }
 

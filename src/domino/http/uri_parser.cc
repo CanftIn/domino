@@ -1,4 +1,4 @@
-#include "uri_parser.h"
+#include <domino/http/uri_parser.h>
 
 #include <cstring>
 #include <sstream>

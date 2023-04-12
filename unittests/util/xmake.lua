@@ -9,3 +9,7 @@ target("to_string_test")
 target("logging_test")
   set_kind("binary")
   add_files("logging_test.cc")
+
+target("stringref_test")
+  set_kind("binary")
+  add_files("stringref_test.cc")
