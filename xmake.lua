@@ -23,3 +23,21 @@ add_cflags("-fPIC", "-pipe")
 add_cxxflags("-fPIC", "-pipe", "-Wno-invalid-offsetof")
 
 includes("**/xmake.lua")
+
+add_includedirs("src")
+
+target("util")
+    set_kind("object")
+    -- add_files("src/domino/util/*.cc")
+
+target("http")
+    set_kind("object")
+    add_files("src/domino/http/*.cc")
+
+target("support")
+    set_kind("object")
+    -- add_files("src/domino/support/*.cc")
+
+target("domino")
+    set_kind("$(kind)")
+    add_deps("http", "support", "util")

@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.6)
 
 set(UNITTESTS_LIST
-  "small_vector_test"
-  "to_string_test"
-  "logging_test"
-  "stringref_test"
+  "integer_sequence_test"
+  "fold_test"
+  "meta_quote_test"
+  "append_test"
+  "list_c_test"
 )
 
 foreach(src ${UNITTESTS_LIST})
