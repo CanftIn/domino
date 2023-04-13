@@ -14,7 +14,6 @@ set(CMAKE_BUILD_TYPE "Debug")
 
 set(project_version "${${PROJECT_NAME}_VERSION}")
 
-
 message(STATUS "Project '${PROJECT_NAME}', version: '${project_version}'")
 
 option(DOMINO_OPT_BUILD_UNITTESTS "Build all domino unittests" ON)
@@ -24,10 +23,11 @@ option(ENABLE_CTEST "Enables testing" ON)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-include_directories(src)
+include_directories(include)
+
 # Create the domino C++ library
 set(domino_SRCS
-  src/domino/http/uri_parser.cc
+  lib/http/uri_parser.cc
 )
 
 set(STATIC_LIB_NAME ${PROJECT_NAME})
