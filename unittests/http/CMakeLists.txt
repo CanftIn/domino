@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 
 set(UNITTESTS_LIST
-  "uri_parser_test"
+  "UriParserTest"
 )
 
 foreach(src ${UNITTESTS_LIST})

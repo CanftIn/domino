@@ -27,7 +27,7 @@ include_directories(include)
 
 # Create the domino C++ library
 set(domino_SRCS
-  lib/http/uri_parser.cc
+  lib/http/UriParser.cc
 )
 
 set(STATIC_LIB_NAME ${PROJECT_NAME})

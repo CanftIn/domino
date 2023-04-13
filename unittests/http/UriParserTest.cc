@@ -1,4 +1,4 @@
-#include <domino/http/uri_parser.h>
+#include <domino/http/UriParser.h>
 
 #include <gtest/gtest.h>
 

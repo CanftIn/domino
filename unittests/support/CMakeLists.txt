@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 
 set(UNITTESTS_LIST
-  "type_traits_test"
+  "TypeTraitsTest"
 )
 
 foreach(src ${UNITTESTS_LIST})

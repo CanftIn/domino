@@ -1,7 +1,7 @@
 #ifndef DOMINO_UTIL_STRINGREF_H_
 #define DOMINO_UTIL_STRINGREF_H_
 
-#include <domino/util/iterator_range.h>
+#include <domino/util/IteratorRange.h>
 
 #include <cassert>
 #include <cstddef>

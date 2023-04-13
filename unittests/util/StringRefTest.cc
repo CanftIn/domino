@@ -1,4 +1,4 @@
-#include <domino/util/stringref.h>
+#include <domino/util/StringRef.h>
 #include <gtest/gtest.h>
 
 using namespace domino;
