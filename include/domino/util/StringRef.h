@@ -2,6 +2,7 @@
 #define DOMINO_UTIL_STRINGREF_H_
 
 #include <domino/util/IteratorRange.h>
+#include <domino/util/STLExtras.h>
 
 #include <cassert>
 #include <cstddef>
@@ -90,7 +91,7 @@ class StringRef {
     return (Length == RHS.Length && compareMemory(Data, RHS.Data, Length) == 0);
   }
 
-  [[nodiscard]] bool equals_insenstive(StringRef RHS) const {
+  [[nodiscard]] bool equals_insensitive(StringRef RHS) const {
     return Length == RHS.Length && compare_insensitive(RHS) == 0;
   }
 
@@ -165,16 +166,82 @@ class StringRef {
 
   [[nodiscard]] bool ends_with_insensitive(StringRef Suffix) const;
 
+  /// Search for the first character \p C in the string.
+  ///
+  /// \returns The index of the first occurrence of \p C, or npos if not
+  /// found.
   [[nodiscard]] size_t find(char C, size_t From = 0) const {
     return std::string_view(*this).find(C, From);
   }
 
+  /// Search for the first character \p C in the string, ignoring case.
+  ///
+  /// \returns The index of the first occurrence of \p C, or npos if not
+  /// found.
   [[nodiscard]] size_t find_insensitive(char C, size_t From = 0) const;
 
-  //[[nodiscard]] size_t find_if(function_ref<bool(char)> F,
-  //                             size_t From = 0) const {
-  //  StringRef S = drop_front(From);
-  //}
+  /// Search for the first character satisfying the predicate \p F
+  ///
+  /// \returns The index of the first character satisfying \p F starting from
+  /// \p From, or npos if not found.
+  [[nodiscard]] size_t find_if(function_ref<bool(char)> F,
+                               size_t From = 0) const {
+    StringRef S = drop_front(From);
+    while (!S.empty()) {
+      if (F(S.front())) return size() - S.size();
+      S = S.drop_front();
+    }
+    return npos;
+  }
+
+  [[nodiscard]] size_t find_if_not(function_ref<bool(char)> F,
+                                   size_t From = 0) const {
+    return find_if([F](char c) { return !F(c); }, From);
+  }
+
+  [[nodiscard]] size_t find(StringRef Str, size_t From = 0) const;
+
+  [[nodiscard]] size_t find_insensitive(StringRef Str, size_t From = 0) const;
+
+  [[nodiscard]] size_t rfind(char C, size_t From = npos) const {
+    From = std::min(From, Length);
+    size_t i = From;
+    while (i != 0) {
+      --i;
+      if (Data[i] == C) return i;
+    }
+    return npos;
+  }
+
+  [[nodiscard]] size_t rfind(StringRef Str) const {
+    return std::string_view(*this).rfind(Str);
+  }
+
+  [[nodiscard]] size_t rfind_insensitive(char C, size_t From = npos) const;
+
+  [[nodiscard]] size_t rfind_insensitive(StringRef Str) const;
+
+  [[nodiscard]] size_t find_first_of(char C, size_t From = 0) const {
+    return find(C, From);
+  }
+
+  [[nodiscard]] size_t find_first_of(StringRef Chars, size_t From = 0) const;
+
+  [[nodiscard]] size_t find_first_not_of(char C, size_t From = 0) const;
+
+  [[nodiscard]] size_t find_first_not_of(StringRef Chars,
+                                         size_t From = 0) const;
+
+  [[nodiscard]] size_t find_last_of(char C, size_t From = npos) const {
+    return rfind(C, From);
+  }
+
+  [[nodiscard]] size_t find_last_of(StringRef Chars, size_t From = npos) const;
+
+  [[nodiscard]] size_t find_last_not_of(char C, size_t From = npos) const;
+
+  [[nodiscard]] size_t find_last_not_of(StringRef Chars,
+                                        size_t From = npos) const;
 
   [[nodiscard]] constexpr StringRef substr(size_t Start,
                                            size_t N = npos) const {
@@ -206,6 +273,45 @@ class StringRef {
     if (!starts_with(Prefix)) return false;
   }
 };
+
+class StringLiteral : public StringRef {
+ private:
+  constexpr StringLiteral(const char* Str, size_t N) : StringRef(Str, N) {}
+
+ public:
+  template <size_t N>
+  constexpr StringLiteral(const char (&Str)[N]) : StringRef(Str, N - 1) {}
+
+  // Explicit construction for strings like "foo\0bar".
+  template <size_t N>
+  static constexpr StringLiteral withInnerNUL(const char (&Str)[N]) {
+    return StringLiteral(Str, N - 1);
+  }
+};
+
+inline bool operator==(StringRef LHS, StringRef RHS) { return LHS.equals(RHS); }
+
+inline bool operator!=(StringRef LHS, StringRef RHS) { return !(LHS == RHS); }
+
+inline bool operator<(StringRef LHS, StringRef RHS) {
+  return LHS.compare(RHS) < 0;
+}
+
+inline bool operator<=(StringRef LHS, StringRef RHS) {
+  return LHS.compare(RHS) <= 0;
+}
+
+inline bool operator>(StringRef LHS, StringRef RHS) {
+  return LHS.compare(RHS) > 0;
+}
+
+inline bool operator>=(StringRef LHS, StringRef RHS) {
+  return LHS.compare(RHS) >= 0;
+}
+
+inline std::string& operator+=(std::string& buffer, StringRef string) {
+  return buffer.append(string.data(), string.size());
+}
 
 }  // namespace domino
 

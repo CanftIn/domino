@@ -31,6 +31,10 @@ target("http")
     set_kind("object")
     add_files("lib/http/*.cc")
 
+target("util")
+    set_kind("object")
+    add_files("lib/util/*.cc")
+
 target("domino")
     set_kind("$(kind)")
     add_deps("http")
