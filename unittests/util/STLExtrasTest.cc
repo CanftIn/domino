@@ -72,3 +72,32 @@ TEST(TranformTest, MoveTransform) {
   EXPECT_EQ(0u, MoveOnly::MoveAssignments);
   EXPECT_EQ(0u, MoveOnly::Destructions);
 }
+
+namespace {
+
+std::pair<int, int> apply_to_pair(function_ref<int(int)> func,
+                                  const std::pair<int, int> &p) {
+  return {func(p.first), func(p.second)};
+}
+
+int square(int x) { return x * x; }
+
+}  // namespace
+
+TEST(FunctionRefTest, FunctionRef) {
+  auto Lambda = [](int N) { return N + 1; };
+  function_ref<int(int)> F(Lambda);
+  EXPECT_EQ(4, F(3));
+
+  auto square_func = std::bind(square, std::placeholders::_1);
+  function_ref<int(int)> square_func_ref = square_func;
+  EXPECT_EQ(900, square_func_ref(30));
+
+  std::vector<std::pair<int, int>> pairs = {{1, 2}, {3, 4}, {5, 6}};
+
+  for (const auto &p : pairs) {
+    auto result = apply_to_pair([](int x) { return x * x * x; }, p);
+    EXPECT_EQ(p.first * p.first * p.first, result.first);
+    EXPECT_EQ(p.second * p.second * p.second, result.second);
+  }
+}
