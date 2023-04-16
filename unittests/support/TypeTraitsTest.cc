@@ -1,4 +1,4 @@
-#include <domino/support/type_traits.h>
+#include <domino/support/TypeTraits.h>
 
 #include <gtest/gtest.h>
 

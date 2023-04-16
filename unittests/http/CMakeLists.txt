@@ -1,15 +1,13 @@
 cmake_minimum_required(VERSION 3.6)
 
-set(UNITTESTS_LIST
-  "uri_parser_test"
-)
+file(GLOB UNITTESTS_LIST *.cc)
 
-foreach(src ${UNITTESTS_LIST})
-  message(STATUS "unittest files found: ${src}.cc")
-  add_executable(${src} EXCLUDE_FROM_ALL ${src}.cc)
-  target_link_libraries(${src} GTest::gtest GTest::gtest_main domino)
-endforeach()
-
-foreach(src ${UNITTESTS_FILES})
-  add_test(${src}-memory-check ${memcheck_command} ./${src})
+foreach(FILE_PATH ${UNITTESTS_LIST})
+  STRING(REGEX REPLACE ".+/(.+)\\..*" "\\1" FILE_NAME ${FILE_PATH})
+  message(STATUS "unittest files found: ${FILE_NAME}")
+  add_executable(${FILE_NAME} ${FILE_NAME}.cc)
+  target_link_libraries(${FILE_NAME} GTest::gtest GTest::gtest_main domino)
+  add_test(${FILE_NAME} ${FILE_NAME})
+  add_dependencies(check ${FILE_NAME})
+  add_test(${FILE_NAME}-memory-check ${memcheck_command} ./${FILE_NAME})
 endforeach()

@@ -1,7 +1,7 @@
 #ifndef DOMINO_UTIL_SMALL_VECTOR_H_
 #define DOMINO_UTIL_SMALL_VECTOR_H_
 
-#include <domino/util/macros.h>
+#include <domino/util/Macros.h>
 
 #include <algorithm>
 #include <cassert>

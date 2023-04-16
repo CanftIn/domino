@@ -1,0 +1,52 @@
+name: ci build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  ubuntu_build:
+    name: ubuntu_build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: setup
+        run: |
+         sudo apt-get update
+         sudo apt-get install cmake g++ clang libgtest-dev make valgrind
+      - uses: actions/checkout@v3
+      - name: Generate makefile using CMake
+        run: |
+          mkdir cmake_build
+          cd cmake_build
+          cmake ..
+      - name: Run make
+        run: |
+          cd cmake_build
+          make -j$(nproc)
+      - name: Run unittests
+        run: |
+          cd cmake_build
+          ctest -j$(nproc)
+
+  xmake_build:
+    name: xmake_build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install cmake g++ clang libgtest-dev make valgrind
+    - name: setup xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: latest
+    - name: pull code
+      uses: actions/checkout@v2
+    - name: xmake build and run unittests
+      run: |
+        xmake b
+        xmake r -g unittests

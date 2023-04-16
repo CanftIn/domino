@@ -1,4 +1,4 @@
-#include <domino/util/to_string.h>
+#include <domino/util/ToString.h>
 #include <gtest/gtest.h>
 
 using domino::to_string;

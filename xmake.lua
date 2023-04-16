@@ -3,6 +3,7 @@ set_version("0.0.1")
 
 option("domino_src",  {description = "workflow src", default = "$(projectdir)/src"})
 option("unittests",   {description = "build unittests", default = true})
+option("memcheck",      {description = "valgrind memcheck", default = false})
 
 if is_mode("release") then
     set_optimize("faster")
@@ -24,20 +25,16 @@ add_cxxflags("-fPIC", "-pipe", "-Wno-invalid-offsetof")
 
 includes("**/xmake.lua")
 
-add_includedirs("src")
-
-target("util")
-    set_kind("object")
-    -- add_files("src/domino/util/*.cc")
+add_includedirs("include")
 
 target("http")
     set_kind("object")
-    add_files("src/domino/http/*.cc")
+    add_files("lib/http/*.cc")
 
-target("support")
+target("util")
     set_kind("object")
-    -- add_files("src/domino/support/*.cc")
+    add_files("lib/util/*.cc")
 
 target("domino")
     set_kind("$(kind)")
-    add_deps("http", "support", "util")
+    add_deps("http")

@@ -1,4 +1,4 @@
-#include <domino/util/small_vector.h>
+#include <domino/util/SmallVector.h>
 #include <gtest/gtest.h>
 #include <stdarg.h>
 

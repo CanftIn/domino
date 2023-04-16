@@ -1,4 +1,4 @@
-#include <domino/util/logging.h>
+#include <domino/util/Logging.h>
 #include <gtest/gtest.h>
 
 TEST(Logging, debug) {

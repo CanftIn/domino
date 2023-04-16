@@ -5,7 +5,7 @@ add_requires("gtest")
 add_packages("gtest")
 add_links("gtest_main")
 
-add_includedirs("../src")
+add_includedirs("../include")
 add_deps("domino")
 
 folds = {"http", "util", "support", "meta"}
