@@ -19,7 +19,7 @@ uint32_t readAll(Transport& trans, uint8_t* buf, uint32_t len) {
   while (have < len) {
     get = trans.read(buf + have, len - have);
     if (get <= 0) {
-      // TODO
+      // TODO: Exception handle
     }
     have += get;
   }
@@ -70,7 +70,7 @@ class Transport {
   void consume(uint32_t len) { consume_virt(len) }
 
   virtual void consume_virt(uint32_t len) {
-    // TODO
+    // TODO: function body
   }
 
   virtual const StringRef getOrigin() const { return "Unknown"; }
