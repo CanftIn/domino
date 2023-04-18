@@ -2,9 +2,13 @@ name: ci build
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - master
+      - rpc
   pull_request:
-    branches: [ "master" ]
+    branches:
+      - master
+      - rpc
 
 jobs:
   ubuntu_build:
