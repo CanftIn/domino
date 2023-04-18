@@ -29,6 +29,7 @@ include_directories(include)
 set(domino_SRCS
   lib/http/UriParser.cc
   lib/util/StringRef.cc
+  lib/rpc/concurrency/Mutex.cc
 )
 
 set(STATIC_LIB_NAME ${PROJECT_NAME})

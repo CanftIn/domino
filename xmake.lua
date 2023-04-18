@@ -35,6 +35,10 @@ target("util")
     set_kind("object")
     add_files("lib/util/*.cc")
 
+target("rpc")
+    set_kind("object")
+    add_files("lib/rpc/concurrency/*.cc")
+
 target("domino")
     set_kind("$(kind)")
     add_deps("http")
