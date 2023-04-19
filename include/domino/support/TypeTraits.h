@@ -21,7 +21,7 @@ class is_integral_or_enum {
 
 template <typename T, typename Enable = void>
 struct add_lvalue_reference_if_not_pointer {
-  using type = T&;
+  using type = T &;
 };
 
 template <typename T>
@@ -37,12 +37,12 @@ struct add_const_past_pointer {
 
 template <typename T>
 struct add_const_past_pointer<T, std::enable_if_t<std::is_pointer_v<T>>> {
-  using type = const std::remove_pointer_t<T>*;
+  using type = const std::remove_pointer_t<T> *;
 };
 
 template <typename T, typename Enable = void>
 struct const_pointer_or_const_ref {
-  using type = const T&;
+  using type = const T &;
 };
 
 template <typename T>
@@ -56,7 +56,8 @@ template <typename T>
 union copy_construction_triviality_helper {
   T t;
   copy_construction_triviality_helper() = default;
-  copy_construction_triviality_helper(const copy_construction_triviality_helper&) = default;
+  copy_construction_triviality_helper(
+      const copy_construction_triviality_helper &) = default;
   ~copy_construction_triviality_helper() = default;
 };
 
@@ -64,7 +65,8 @@ template <typename T>
 union move_construction_triviality_helper {
   T t;
   move_construction_triviality_helper() = default;
-  move_construction_triviality_helper(move_construction_triviality_helper&&) = default;
+  move_construction_triviality_helper(move_construction_triviality_helper &&) =
+      default;
   ~move_construction_triviality_helper() = default;
 };
 
@@ -80,18 +82,37 @@ struct is_trivially_copy_constructible
     : std::is_copy_constructible<
           ::domino::detail::copy_construction_triviality_helper<T>> {};
 template <typename T>
-struct is_trivially_copy_constructible<T&> : std::true_type {};
+struct is_trivially_copy_constructible<T &> : std::true_type {};
 template <typename T>
-struct is_trivially_copy_constructible<T&&> : std::false_type {};
+struct is_trivially_copy_constructible<T &&> : std::false_type {};
 
 template <typename T>
 struct is_trivially_move_constructible
     : std::is_move_constructible<
           ::domino::detail::move_construction_triviality_helper<T>> {};
 template <typename T>
-struct is_trivially_move_constructible<T&> : std::true_type {};
+struct is_trivially_move_constructible<T &> : std::true_type {};
 template <typename T>
-struct is_trivially_move_constructible<T&&> : std::true_type {};
+struct is_trivially_move_constructible<T &&> : std::true_type {};
+
+template <typename T>
+struct is_copy_assignable {
+  template <class F>
+  static auto get(F *)
+      -> decltype(std::declval<F &>() = std::declval<const F &>(),
+                  std::true_type{});
+  static std::false_type get(...);
+  static constexpr bool value = decltype(get((T *)nullptr))::value;
+};
+
+template <typename T>
+struct is_move_assignable {
+  template <class F>
+  static auto get(F *)
+      -> decltype(std::declval<F &>() = std::declval<F &&>(), std::true_type{});
+  static std::false_type get(...);
+  static constexpr bool value = decltype(get((T *)nullptr))::value;
+};
 
 }  // namespace domino
 
