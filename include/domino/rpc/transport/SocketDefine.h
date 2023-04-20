@@ -4,5 +4,6 @@
 #include <errno.h>
 
 #define DOMINO_SOCKET int
+#define DOMINO_INVALID_SOCKET (-1)
 
 #endif  // DOMINO_RPC_TRANSPORT_SOCKETDEFINE_H_

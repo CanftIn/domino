@@ -95,8 +95,8 @@ class Socket : public VirtualTransport<Socket> {
   bool noDelay_;
   uint32_t maxRecvRetries_;
   union {
-    struct sockaddr_in addr4_;
-    struct sockaddr_in6 addr6_;
+    struct sockaddr_in ipv4;
+    struct sockaddr_in6 ipv6;
   } cachedPeerAddr_;
 
  private:
