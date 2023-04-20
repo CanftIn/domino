@@ -8,8 +8,6 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-#include <memory>
-
 namespace domino {
 namespace rpc {
 namespace transport {

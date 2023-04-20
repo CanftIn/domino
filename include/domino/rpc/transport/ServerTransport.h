@@ -4,8 +4,6 @@
 #include <domino/rpc/transport/SocketDefine.h>
 #include <domino/rpc/transport/Transport.h>
 
-#include <memory>
-
 namespace domino {
 namespace rpc {
 namespace transport {

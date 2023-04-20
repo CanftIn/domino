@@ -4,8 +4,6 @@
 #include <domino/rpc/Configuration.h>
 #include <domino/rpc/transport/Transport.h>
 
-#include <memory>
-
 namespace domino {
 namespace rpc {
 namespace transport {

@@ -15,7 +15,7 @@ namespace transport {
 class ServerSocket : public ServerTransport {
  public:
   using socket_func_type = std::function<void(DOMINO_SOCKET fd)>;
-  
+
   static const int DEFAULT_BACKLOG = 1024;
 
   ServerSocket(int port);
@@ -69,7 +69,7 @@ class ServerSocket : public ServerTransport {
   concurrency::Mutex rwMutex_;
   DOMINO_SOCKET interruptSockWriter_;
   DOMINO_SOCKET interruptSockReader_;
-  
+
   socket_func_type listenCallback_;
   socket_func_type acceptCallback_;
 };
