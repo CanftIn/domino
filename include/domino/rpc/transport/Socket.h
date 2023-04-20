@@ -1,8 +1,14 @@
 #ifndef DOMINO_RPC_TRANSPORT_SOCKET_H_
 #define DOMINO_RPC_TRANSPORT_SOCKET_H_
 
+#include <domino/rpc/Configuration.h>
 #include <domino/rpc/transport/SocketDefine.h>
+#include <domino/rpc/transport/Transport.h>
 #include <domino/rpc/transport/VirtualTransport.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
+#include <memory>
 
 namespace domino {
 namespace rpc {
@@ -68,7 +74,7 @@ class Socket : public VirtualTransport<Socket> {
 
   uint16_t getPeerPort() const;
 
-  DOMINO_SOCKET getSocketFD() override { return socket_; }
+  DOMINO_SOCKET getSocketFD() { return socket_; }
 
   void setSocketFD(DOMINO_SOCKET fd) { socket_ = fd; }
 

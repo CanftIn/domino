@@ -1,5 +1,5 @@
-#ifndef DOMINO_RPC_TRANSPORT_SOCKETDEFINE_H_
-#define DOMINO_RPC_TRANSPORT_SOCKETDEFINE_H_
+#ifndef DOMINO_RPC_TRANSPORT_VIRTUALTRANSPORT_H_
+#define DOMINO_RPC_TRANSPORT_VIRTUALTRANSPORT_H_
 
 #include <domino/rpc/Configuration.h>
 #include <domino/rpc/transport/Transport.h>
@@ -54,4 +54,4 @@ class VirtualTransport : public Super {
 }  // namespace rpc
 }  // namespace domino
 
-#endif  // DOMINO_RPC_TRANSPORT_SOCKETDEFINE_H_
+#endif  // DOMINO_RPC_TRANSPORT_VIRTUALTRANSPORT_H_

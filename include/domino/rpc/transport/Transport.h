@@ -67,7 +67,7 @@ class Transport {
 
   virtual void flush() {}
 
-  void consume(uint32_t len) { consume_virt(len) }
+  void consume(uint32_t len) { consume_virt(len); }
 
   virtual void consume_virt(uint32_t len) {
     // TODO: function body

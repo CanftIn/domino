@@ -5,6 +5,11 @@
 #include <cstring>
 #include <sstream>
 
+template <class T>
+inline const void* const_cast_sockopt(const T* V) {
+  return reinterpret_cast<const void*>(V);
+}
+
 namespace domino {
 
 namespace rpc {

@@ -30,6 +30,7 @@ set(domino_SRCS
   lib/http/UriParser.cc
   lib/util/StringRef.cc
   lib/rpc/concurrency/Mutex.cc
+  lib/rpc/transport/Socket.cc
 )
 
 set(STATIC_LIB_NAME ${PROJECT_NAME})
