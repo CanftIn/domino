@@ -62,6 +62,8 @@ TYPED_TEST(IntrusiveRefCntPtrTest, MakeIntrusiveRefCnt) {
   EXPECT_EQ(0, NumInstances);
 }
 
+namespace domino {
+
 struct InterceptRefCounted : public RefCountedBase<InterceptRefCounted> {
   InterceptRefCounted(bool *Released, bool *Retained)
       : Released(Released), Retained(Retained) {}
@@ -79,6 +81,9 @@ struct IntrusiveRefCntPtrInfo<InterceptRefCounted> {
     I->Release();
   }
 };
+
+}  // namespace domino
+
 TEST(IntrusiveRefCntPtr, UsesTraitsToRetainAndRelease) {
   bool Released = false;
   bool Retained = false;
