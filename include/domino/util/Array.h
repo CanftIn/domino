@@ -62,7 +62,7 @@ class Array final {
 
   template <size_t M, typename std::enable_if<(M <= N), int>::type = 0>
   void swap(Array<Tp, M>& other) noexcept {
-    std::swap_ranges(begin(), end(), other.begin());
+    std::swap_ranges(begin(), begin() + M, other.begin());
   }
 
   constexpr iterator begin() noexcept { return iterator(data()); }
