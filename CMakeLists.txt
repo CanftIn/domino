@@ -18,6 +18,7 @@ message(STATUS "Project '${PROJECT_NAME}', version: '${project_version}'")
 
 option(DOMINO_OPT_BUILD_UNITTESTS "Build all domino unittests" ON)
 option(ENABLE_CTEST "Enables testing" ON)
+option(DOMINO_BENCHMARK "Enables benchmark" ON)
 
 # CMake helpers:
 include(GNUInstallDirs)
@@ -43,4 +44,8 @@ endif()
 
 if (DOMINO_OPT_BUILD_UNITTESTS)
   add_subdirectory(unittests #[[EXCLUDE_FROM_ALL]])
+endif()
+
+if (DOMINO_BENCHMARK)
+  add_subdirectory(benchmark)
 endif()
