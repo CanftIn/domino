@@ -174,3 +174,63 @@ TEST(TypeTraits, is_instantiation_of) {
   EXPECT_TRUE((!is_instantiation_of<Multiple, Double<int, int>>::value));
   EXPECT_TRUE((!is_instantiation_of<Multiple, Single<int>>::value));
 }
+
+TEST(TypeTraits, is_functor) {
+  EXPECT_TRUE((is_functor<Functor>::value));
+  EXPECT_TRUE((!is_functor<MyClass>::value));
+}
+
+template <class>
+class NotATypeCondition {};
+
+TEST(TypeTraits, is_type_condition) {
+  EXPECT_TRUE((is_type_condition<std::is_reference>::value));
+  EXPECT_TRUE((!is_type_condition<NotATypeCondition>::value));
+}
+
+template <class Result, class... Args>
+struct MyStatelessFunctor final {
+  Result operator()(Args...) {}
+};
+
+template <class Result, class... Args>
+struct MyStatelessConstFunctor final {
+  Result operator()(Args...) const {}
+};
+
+TEST(TypeTraits, is_stateless_lambda) {
+  auto stateless_lambda = [](int a) { return a; };
+  EXPECT_TRUE((is_stateless_lambda<decltype(stateless_lambda)>::value));
+
+  int b = 4;
+  auto stateful_lambda_1 = [&](int a) { return a + b; };
+  EXPECT_TRUE((!is_stateless_lambda<decltype(stateful_lambda_1)>::value));
+
+  auto stateful_lambda_2 = [=](int a) { return a + b; };
+  EXPECT_TRUE((!is_stateless_lambda<decltype(stateful_lambda_2)>::value));
+
+  auto stateful_lambda_3 = [b](int a) { return a + b; };
+  EXPECT_TRUE((!is_stateless_lambda<decltype(stateful_lambda_3)>::value));
+
+  EXPECT_TRUE((!is_stateless_lambda<MyStatelessFunctor<int, int>>::value &&
+               "even if stateless, a functor is not a lambda, so it's false"));
+  EXPECT_TRUE((!is_stateless_lambda<MyStatelessFunctor<void, int>>::value &&
+               "even if stateless, a functor is not a lambda, so it's false"));
+  EXPECT_TRUE((!is_stateless_lambda<MyStatelessConstFunctor<int, int>>::value &&
+               "even if stateless, a functor is not a lambda, so it's false"));
+  EXPECT_TRUE(
+      (!is_stateless_lambda<MyStatelessConstFunctor<void, int>>::value &&
+       "even if stateless, a functor is not a lambda, so it's false"));
+
+  class Dummy final {};
+  EXPECT_TRUE((!is_stateless_lambda<Dummy>::value &&
+               "A non-functor type is also not a lambda"));
+
+  EXPECT_TRUE((!is_stateless_lambda<int>::value && "An int is not a lambda"));
+
+  using Func = int(int);
+  EXPECT_TRUE(
+      (!is_stateless_lambda<Func>::value && "A function is not a lambda"));
+  EXPECT_TRUE((!is_stateless_lambda<Func *>::value &&
+               "A function pointer is not a lambda"));
+}
