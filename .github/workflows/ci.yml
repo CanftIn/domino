@@ -19,7 +19,7 @@ jobs:
       - name: setup
         run: |
          sudo apt-get update
-         sudo apt-get install cmake g++ clang libgtest-dev make valgrind
+         sudo apt-get install cmake g++ clang libgtest-dev make valgrind libbenchmark-dev
       - uses: actions/checkout@v3
       - name: Generate makefile using CMake
         run: |
@@ -43,7 +43,7 @@ jobs:
     - name: install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install cmake g++ clang libgtest-dev make valgrind
+        sudo apt-get install cmake g++ clang libgtest-dev make valgrind libbenchmark-dev
     - name: setup xmake
       uses: xmake-io/github-action-setup-xmake@v1
       with:
