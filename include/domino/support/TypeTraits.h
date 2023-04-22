@@ -1,6 +1,7 @@
 #ifndef DOMINO_SUPPORT_TYPE_TRAITS_H_
 #define DOMINO_SUPPORT_TYPE_TRAITS_H_
 
+#include <functional>
 #include <type_traits>
 #include <utility>
 
@@ -113,6 +114,40 @@ struct is_move_assignable {
   static std::false_type get(...);
   static constexpr bool value = decltype(get((T *)nullptr))::value;
 };
+
+template <typename T, class Enable = void>
+struct is_equality_comparable : std::false_type {};
+template <typename T>
+struct is_equality_comparable<
+    T, std::enable_if_t<std::is_same_v<
+           decltype(std::declval<T &>() == std::declval<T &>()), bool>>>
+    : std::true_type {};
+template <typename T>
+using is_equality_comparable_t = typename is_equality_comparable<T>::type;
+
+template <typename T, class Enable = void>
+struct is_hashable : std::false_type {};
+template <typename T>
+struct is_hashable<
+    T, std::enable_if_t<std::is_same_v<
+           decltype(std::hash<T>{}(std::declval<T>())), std::size_t>>>
+    : std::true_type {};
+template <typename T>
+using is_hashable_t = typename is_hashable<T>::type;
+
+template <typename T>
+struct is_function_type : std::false_type {};
+template <typename Ret, class... Args>
+struct is_function_type<Ret(Args...)> : std::true_type {};
+template <typename T>
+using is_function_type_t = typename is_function_type<T>::type;
+
+template <template <class...> class Template, class T>
+struct is_instantiation_of : std::false_type {};
+template <template <class...> class Template, class... Args>
+struct is_instantiation_of<Template, Template<Args...>> : std::true_type {};
+template <template <class...> class Template, class T>
+using is_instantiation_of_t = typename is_instantiation_of<Template, T>::type;
 
 }  // namespace domino
 
