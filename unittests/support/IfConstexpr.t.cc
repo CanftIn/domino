@@ -1,7 +1,7 @@
-#include <domino/util/IfConstexpr.h>
+#include <domino/support/IfConstexpr.h>
 #include <gtest/gtest.h>
 
-#include "MoveOnly.h"
+#include "../util/MoveOnly.h"
 
 using namespace domino;
 
