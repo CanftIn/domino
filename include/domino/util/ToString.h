@@ -1,6 +1,8 @@
 #ifndef DOMINO_UTIL_TO_STRING_H_
 #define DOMINO_UTIL_TO_STRING_H_
 
+#include <domino/util/StringRef.h>
+
 #include <cmath>
 #include <limits>
 #include <locale>
@@ -91,6 +93,14 @@ template <typename T>
 std::string to_string(const std::set<T>& s) {
   std::ostringstream o;
   o << "{" << to_string(s.begin(), s.end()) << "}";
+  return o.str();
+}
+
+std::string to_string(const StringRef& s) {
+  std::ostringstream o;
+  for (auto it = s.begin(); it != s.end(); ++it) {
+    o << to_string(*it);
+  }
   return o.str();
 }
 

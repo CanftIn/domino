@@ -1,9 +1,11 @@
+#include <domino/util/ArrayRef.h>
+#include <domino/util/EditDistance.h>
 #include <domino/util/Macros.h>
 #include <domino/util/StringExtras.h>
 #include <domino/util/StringRef.h>
+#include <limits.h>
 
 #include <bitset>
-#include <limits.h>
 
 using namespace domino;
 
@@ -135,7 +137,6 @@ StringRef::size_type StringRef::find_first_of(StringRef Chars,
   return npos;
 }
 
-
 /// find_first_not_of - Find the first character in the string that is not
 /// \arg C or npos if not found.
 StringRef::size_type StringRef::find_first_not_of(char C, size_t From) const {
@@ -149,12 +150,10 @@ StringRef::size_type StringRef::find_first_not_of(char C, size_t From) const {
 StringRef::size_type StringRef::find_first_not_of(StringRef Chars,
                                                   size_t From) const {
   std::bitset<1 << CHAR_BIT> CharBits;
-  for (char C : Chars)
-    CharBits.set((unsigned char)C);
+  for (char C : Chars) CharBits.set((unsigned char)C);
 
   for (size_type i = std::min(From, Length), e = Length; i != e; ++i)
-    if (!CharBits.test((unsigned char)Data[i]))
-      return i;
+    if (!CharBits.test((unsigned char)Data[i])) return i;
   return npos;
 }
 
@@ -165,12 +164,10 @@ StringRef::size_type StringRef::find_first_not_of(StringRef Chars,
 StringRef::size_type StringRef::find_last_of(StringRef Chars,
                                              size_t From) const {
   std::bitset<1 << CHAR_BIT> CharBits;
-  for (char C : Chars)
-    CharBits.set((unsigned char)C);
+  for (char C : Chars) CharBits.set((unsigned char)C);
 
   for (size_type i = std::min(From, Length) - 1, e = -1; i != e; --i)
-    if (CharBits.test((unsigned char)Data[i]))
-      return i;
+    if (CharBits.test((unsigned char)Data[i])) return i;
   return npos;
 }
 
@@ -178,8 +175,7 @@ StringRef::size_type StringRef::find_last_of(StringRef Chars,
 /// \arg C, or npos if not found.
 StringRef::size_type StringRef::find_last_not_of(char C, size_t From) const {
   for (size_type i = std::min(From, Length) - 1, e = -1; i != e; --i)
-    if (Data[i] != C)
-      return i;
+    if (Data[i] != C) return i;
   return npos;
 }
 
@@ -190,11 +186,122 @@ StringRef::size_type StringRef::find_last_not_of(char C, size_t From) const {
 StringRef::size_type StringRef::find_last_not_of(StringRef Chars,
                                                  size_t From) const {
   std::bitset<1 << CHAR_BIT> CharBits;
-  for (char C : Chars)
-    CharBits.set((unsigned char)C);
+  for (char C : Chars) CharBits.set((unsigned char)C);
 
   for (size_type i = std::min(From, Length) - 1, e = -1; i != e; --i)
-    if (!CharBits.test((unsigned char)Data[i]))
-      return i;
+    if (!CharBits.test((unsigned char)Data[i])) return i;
   return npos;
+}
+
+void StringRef::split(SmallVectorImpl<StringRef>& A, StringRef Separator,
+                      int MaxSplit, bool KeepEmpty) const {
+  StringRef S = *this;
+
+  // Count down from MaxSplit. When MaxSplit is -1, this will just split
+  // "forever". This doesn't support splitting more than 2^31 times
+  // intentionally; if we ever want that we can make MaxSplit a 64-bit integer
+  // but that seems unlikely to be useful.
+  while (MaxSplit-- != 0) {
+    size_t Idx = S.find(Separator);
+    if (Idx == npos) break;
+
+    // Push this split.
+    if (KeepEmpty || Idx > 0) A.push_back(S.slice(0, Idx));
+
+    // Jump forward.
+    S = S.slice(Idx + Separator.size(), npos);
+  }
+
+  // Push the tail.
+  if (KeepEmpty || !S.empty()) A.push_back(S);
+}
+
+void StringRef::split(SmallVectorImpl<StringRef>& A, char Separator,
+                      int MaxSplit, bool KeepEmpty) const {
+  StringRef S = *this;
+
+  // Count down from MaxSplit. When MaxSplit is -1, this will just split
+  // "forever". This doesn't support splitting more than 2^31 times
+  // intentionally; if we ever want that we can make MaxSplit a 64-bit integer
+  // but that seems unlikely to be useful.
+  while (MaxSplit-- != 0) {
+    size_t Idx = S.find(Separator);
+    if (Idx == npos) break;
+
+    // Push this split.
+    if (KeepEmpty || Idx > 0) A.push_back(S.slice(0, Idx));
+
+    // Jump forward.
+    S = S.slice(Idx + 1, npos);
+  }
+
+  // Push the tail.
+  if (KeepEmpty || !S.empty()) A.push_back(S);
+}
+
+/// compare_numeric - Compare strings, handle embedded numbers.
+int StringRef::compare_numeric(StringRef RHS) const {
+  for (size_t I = 0, E = std::min(Length, RHS.Length); I != E; ++I) {
+    // Check for sequences of digits.
+    if (isDigit(Data[I]) && isDigit(RHS.Data[I])) {
+      // The longer sequence of numbers is considered larger.
+      // This doesn't really handle prefixed zeros well.
+      size_t J;
+      for (J = I + 1; J != E + 1; ++J) {
+        bool ld = J < Length && isDigit(Data[J]);
+        bool rd = J < RHS.Length && isDigit(RHS.Data[J]);
+        if (ld != rd) return rd ? -1 : 1;
+        if (!rd) break;
+      }
+      // The two number sequences have the same length (J-I), just memcmp them.
+      if (int Res = compareMemory(Data + I, RHS.Data + I, J - I))
+        return Res < 0 ? -1 : 1;
+      // Identical number sequences, continue search after the numbers.
+      I = J - 1;
+      continue;
+    }
+    if (Data[I] != RHS.Data[I])
+      return (unsigned char)Data[I] < (unsigned char)RHS.Data[I] ? -1 : 1;
+  }
+  if (Length == RHS.Length) return 0;
+  return Length < RHS.Length ? -1 : 1;
+}
+
+// Compute the edit distance between the two given strings.
+unsigned StringRef::edit_distance(domino::StringRef Other,
+                                  bool AllowReplacements,
+                                  unsigned MaxEditDistance) const {
+  return domino::ComputeEditDistance(ArrayRef(data(), size()),
+                                     ArrayRef(Other.data(), Other.size()),
+                                     AllowReplacements, MaxEditDistance);
+}
+
+unsigned StringRef::edit_distance_insensitive(StringRef Other,
+                                              bool AllowReplacements,
+                                              unsigned MaxEditDistance) const {
+  return domino::ComputeMappedEditDistance(
+      ArrayRef(data(), size()), ArrayRef(Other.data(), Other.size()),
+      domino::toLower, AllowReplacements, MaxEditDistance);
+}
+
+size_t StringRef::count(StringRef Str) const {
+  size_t Count = 0;
+  size_t Pos = 0;
+  size_t N = Str.size();
+  if (!N) return 0;
+  while ((Pos = find(Str, Pos)) != npos) {
+    ++Count;
+    Pos += N;
+  }
+  return Count;
+}
+
+std::string StringRef::lower() const {
+  return std::string(map_iterator(begin(), toLower),
+                     map_iterator(end(), toLower));
+}
+
+std::string StringRef::upper() const {
+  return std::string(map_iterator(begin(), toUpper),
+                     map_iterator(end(), toUpper));
 }

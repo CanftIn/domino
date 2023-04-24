@@ -3,6 +3,7 @@
 
 #include <domino/util/IteratorRange.h>
 #include <domino/util/STLExtras.h>
+#include <domino/util/SmallVector.h>
 
 #include <cassert>
 #include <cstddef>
@@ -243,6 +244,33 @@ class StringRef {
   [[nodiscard]] size_t find_last_not_of(StringRef Chars,
                                         size_t From = npos) const;
 
+  [[nodiscard]] bool contains(StringRef Other) const {
+    return find(Other) != npos;
+  }
+
+  [[nodiscard]] bool contains(char C) const { return find_first_of(C) != npos; }
+
+  [[nodiscard]] bool contains_insensitive(StringRef Other) const {
+    return find_insensitive(Other) != npos;
+  }
+
+  [[nodiscard]] bool contains_insensitive(char C) const {
+    return find_insensitive(C) != npos;
+  }
+
+  [[nodiscard]] size_t count(char C) const {
+    size_t Count = 0;
+    for (size_t i = 0, e = Length; i != e; ++i)
+      if (Data[i] == C) ++Count;
+    return Count;
+  }
+
+  size_t count(StringRef Str) const;
+
+  [[nodiscard]] std::string lower() const;
+
+  [[nodiscard]] std::string upper() const;
+
   [[nodiscard]] constexpr StringRef substr(size_t Start,
                                            size_t N = npos) const {
     Start = std::min(Start, Length);
@@ -259,6 +287,14 @@ class StringRef {
     return drop_front(size() - N);
   }
 
+  [[nodiscard]] StringRef take_while(function_ref<bool(char)> F) const {
+    return substr(0, find_if_not(F));
+  }
+
+  [[nodiscard]] StringRef take_until(function_ref<bool(char)> F) const {
+    return substr(0, find_if(F));
+  }
+
   [[nodiscard]] StringRef drop_front(size_t N = 1) const {
     assert(size() >= N && "Dropping more elements than exist");
     return substr(N);
@@ -269,8 +305,109 @@ class StringRef {
     return substr(0, size() - N);
   }
 
+  [[nodiscard]] StringRef drop_while(function_ref<bool(char)> F) const {
+    return substr(find_if_not(F));
+  }
+
+  [[nodiscard]] StringRef drop_until(function_ref<bool(char)> F) const {
+    return substr(find_if(F));
+  }
+
   bool consume_front(StringRef Prefix) {
     if (!starts_with(Prefix)) return false;
+
+    *this = drop_front(Prefix.size());
+    return true;
+  }
+
+  bool consume_front_insensitive(StringRef Prefix) {
+    if (!starts_with_insensitive(Prefix)) return false;
+
+    *this = drop_front(Prefix.size());
+    return true;
+  }
+
+  bool consume_back(StringRef Suffix) {
+    if (!ends_with(Suffix)) return false;
+
+    *this = drop_back(Suffix.size());
+    return true;
+  }
+
+  bool consume_back_insensitive(StringRef Suffix) {
+    if (!ends_with_insensitive(Suffix)) return false;
+
+    *this = drop_back(Suffix.size());
+    return true;
+  }
+
+  [[nodiscard]] StringRef slice(size_t Start, size_t End) const {
+    Start = std::min(Start, Length);
+    End = std::min(std::max(Start, End), Length);
+    return StringRef(Data + Start, End - Start);
+  }
+
+  [[nodiscard]] std::pair<StringRef, StringRef> split(char Separator) const {
+    return split(StringRef(&Separator, 1));
+  }
+
+  [[nodiscard]] std::pair<StringRef, StringRef> split(
+      StringRef Separator) const {
+    size_t Idx = find(Separator);
+    if (Idx == npos) return std::make_pair(*this, StringRef());
+    return std::make_pair(slice(0, Idx), slice(Idx + Separator.size(), npos));
+  }
+
+  [[nodiscard]] std::pair<StringRef, StringRef> rsplit(
+      StringRef Separator) const {
+    size_t Idx = rfind(Separator);
+    if (Idx == npos) return std::make_pair(*this, StringRef());
+    return std::make_pair(slice(0, Idx), slice(Idx + Separator.size(), npos));
+  }
+
+  void split(SmallVectorImpl<StringRef>& A, StringRef Separator,
+             int MaxSplit = -1, bool KeepEmpty = true) const;
+
+  void split(SmallVectorImpl<StringRef>& A, char Separator, int MaxSplit = -1,
+             bool KeepEmpty = true) const;
+
+  [[nodiscard]] std::pair<StringRef, StringRef> rsplit(char Separator) const {
+    return rsplit(StringRef(&Separator, 1));
+  }
+
+  [[nodiscard]] StringRef ltrim(char Char) const {
+    return drop_front(std::min(Length, find_first_not_of(Char)));
+  }
+
+  [[nodiscard]] StringRef ltrim(StringRef Chars = " \t\n\v\f\r") const {
+    return drop_front(std::min(Length, find_first_not_of(Chars)));
+  }
+
+  [[nodiscard]] StringRef rtrim(char Char) const {
+    return drop_back(Length - std::min(Length, find_last_not_of(Char) + 1));
+  }
+
+  [[nodiscard]] StringRef rtrim(StringRef Chars = " \t\n\v\f\r") const {
+    return drop_back(Length - std::min(Length, find_last_not_of(Chars) + 1));
+  }
+
+  [[nodiscard]] StringRef trim(char Char) const {
+    return ltrim(Char).rtrim(Char);
+  }
+
+  [[nodiscard]] StringRef trim(StringRef Chars = " \t\n\v\f\r") const {
+    return ltrim(Chars).rtrim(Chars);
+  }
+
+  [[nodiscard]] StringRef detectEOL() const {
+    size_t Pos = find('\r');
+    if (Pos == npos) {
+      // If there is no carriage return, assume unix
+      return "\n";
+    }
+    if (Pos + 1 < Length && Data[Pos + 1] == '\n') return "\r\n";  // Windows
+    if (Pos > 0 && Data[Pos - 1] == '\n') return "\n\r";  // You monster!
+    return "\r";                                          // Classic Mac
   }
 };
 
