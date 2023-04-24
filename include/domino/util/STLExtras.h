@@ -11,6 +11,9 @@
 
 namespace domino {
 
+template <typename T, T>
+struct SameType;
+
 template <typename T>
 struct remove_cvref {
   using type = std::remove_cv_t<std::remove_reference_t<T>>;
@@ -330,6 +333,9 @@ template <class ContainerTy, class FuncTy>
 auto map_range(ContainerTy &&C, FuncTy F) {
   return make_range(map_iterator(C.begin(), F), map_iterator(C.end(), F));
 }
+
+template <typename T, typename... Ts>
+using is_one_of = std::disjunction<std::is_same<T, Ts>...>;
 
 }  // namespace domino
 

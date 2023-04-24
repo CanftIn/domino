@@ -14,6 +14,16 @@
 
 namespace domino {
 
+class StringRef;
+bool getAsUnsignedInteger(StringRef Str, unsigned Radix,
+                          unsigned long long& Result);
+
+bool getAsSignedInteger(StringRef Str, unsigned Radix, long long& Result);
+
+bool consumeUnsignedInteger(StringRef& Str, unsigned Radix,
+                            unsigned long long& Result);
+bool consumeSignedInteger(StringRef& Str, unsigned Radix, long long& Result);
+
 class StringRef {
  public:
   static constexpr size_t npos = ~size_t(0);
@@ -266,6 +276,42 @@ class StringRef {
   }
 
   size_t count(StringRef Str) const;
+
+  template <typename T>
+  bool getAsInteger(unsigned Radix, T& Result) const {
+    if constexpr (std::numeric_limits<T>::is_signed) {
+      long long LLVal;
+      if (getAsSignedInteger(*this, Radix, LLVal) ||
+          static_cast<T>(LLVal) != LLVal)
+        return true;
+      Result = LLVal;
+    } else {
+      unsigned long long ULLVal;
+      if (getAsUnsignedInteger(*this, Radix, ULLVal) ||
+          static_cast<unsigned long long>(static_cast<T>(ULLVal)) != ULLVal)
+        return true;
+      Result = ULLVal;
+    }
+    return false;
+  }
+
+  template <typename T>
+  bool consumeInteger(unsigned Radix, T& Result) {
+    if constexpr (std::numeric_limits<T>::is_signed) {
+      long long LLVal;
+      if (consumeSignedInteger(*this, Radix, LLVal) ||
+          static_cast<long long>(static_cast<T>(LLVal)) != LLVal)
+        return true;
+      Result = LLVal;
+    } else {
+      unsigned long long ULLVal;
+      if (consumeUnsignedInteger(*this, Radix, ULLVal) ||
+          static_cast<unsigned long long>(static_cast<T>(ULLVal)) != ULLVal)
+        return true;
+      Result = ULLVal;
+    }
+    return false;
+  }
 
   [[nodiscard]] std::string lower() const;
 

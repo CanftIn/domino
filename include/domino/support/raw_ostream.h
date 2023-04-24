@@ -107,7 +107,7 @@ class raw_ostream {
 
   void SetBufferSize(size_t Size) {
     flush();
-    setBufferAndMode(new char[Size], Size, BufferKind::InternalBuffer);
+    SetBufferAndMode(new char[Size], Size, BufferKind::InternalBuffer);
   }
 
   size_t GetBufferSize() const {
@@ -450,7 +450,7 @@ raw_ostream& operator<<(raw_ostream& OS, std::nullopt_t);
 
 template <typename T, typename = decltype(std::declval<raw_ostream&>()
                                           << std::declval<const T&>())>
-raw_ostream& operator<<(raw_ostrema& OS, const std::optional<T>& O) {
+raw_ostream& operator<<(raw_ostream& OS, const std::optional<T>& O) {
   if (O)
     OS << *O;
   else
