@@ -61,7 +61,7 @@ class format_object final : public format_object_base {
 
  public:
   format_object(const char* fmt, const Ts&... vals)
-      : format_object_base(fmt), Vals(std::forward<Ts>(vals)...) {
+      : format_object_base(fmt), Vals(vals...) {
     validate_format_parameters<Ts...>();
   }
 

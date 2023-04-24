@@ -1,10 +1,11 @@
-#include <domino/util/Logging.h>
 #include <domino/support/Format.h>
 #include <domino/support/NativeFormatting.h>
 #include <domino/support/raw_ostream.h>
 #include <domino/util/ArrayRef.h>
+#include <domino/util/Logging.h>
 #include <domino/util/SmallString.h>
 #include <domino/util/StringExtras.h>
+#include <domino/util/bit.h>
 
 #include <cmath>
 
@@ -92,32 +93,32 @@ static void write_signed(raw_ostream &S, T N, size_t MinDigits,
 }
 
 void domino::write_integer(raw_ostream &S, unsigned int N, size_t MinDigits,
-                         IntegerStyle Style) {
+                           IntegerStyle Style) {
   write_unsigned(S, N, MinDigits, Style);
 }
 
 void domino::write_integer(raw_ostream &S, int N, size_t MinDigits,
-                         IntegerStyle Style) {
+                           IntegerStyle Style) {
   write_signed(S, N, MinDigits, Style);
 }
 
 void domino::write_integer(raw_ostream &S, unsigned long N, size_t MinDigits,
-                         IntegerStyle Style) {
+                           IntegerStyle Style) {
   write_unsigned(S, N, MinDigits, Style);
 }
 
 void domino::write_integer(raw_ostream &S, long N, size_t MinDigits,
-                         IntegerStyle Style) {
+                           IntegerStyle Style) {
   write_signed(S, N, MinDigits, Style);
 }
 
-void domino::write_integer(raw_ostream &S, unsigned long long N, size_t MinDigits,
-                         IntegerStyle Style) {
+void domino::write_integer(raw_ostream &S, unsigned long long N,
+                           size_t MinDigits, IntegerStyle Style) {
   write_unsigned(S, N, MinDigits, Style);
 }
 
 void domino::write_integer(raw_ostream &S, long long N, size_t MinDigits,
-                         IntegerStyle Style) {
+                           IntegerStyle Style) {
   write_signed(S, N, MinDigits, Style);
 }
 
@@ -128,14 +129,15 @@ inline char hexdigit(unsigned X, bool LowerCase = false) {
   return LUT[X] | Offset;
 }
 
-template <typename T> [[nodiscard]] int bit_width(T Value) {
+template <typename T>
+[[nodiscard]] int bit_width(T Value) {
   static_assert(std::is_unsigned_v<T>,
                 "Only unsigned integral types are allowed.");
-  return std::numeric_limits<T>::digits - llvm::countl_zero(Value);
+  return std::numeric_limits<T>::digits - domino::countl_zero(Value);
 }
 
 void domino::write_hex(raw_ostream &S, uint64_t N, HexPrintStyle Style,
-                     std::optional<size_t> Width) {
+                       std::optional<size_t> Width) {
   const size_t kMaxWidth = 128u;
 
   size_t W = std::min(kMaxWidth, Width.value_or(0u));
@@ -164,7 +166,7 @@ void domino::write_hex(raw_ostream &S, uint64_t N, HexPrintStyle Style,
 }
 
 void domino::write_double(raw_ostream &S, double N, FloatStyle Style,
-                        std::optional<size_t> Precision) {
+                          std::optional<size_t> Precision) {
   size_t Prec = Precision.value_or(getDefaultPrecision(Style));
 
   if (std::isnan(N)) {
@@ -188,7 +190,6 @@ void domino::write_double(raw_ostream &S, double N, FloatStyle Style,
   Out << "%." << Prec << Letter;
 
   if (Style == FloatStyle::Exponent || Style == FloatStyle::ExponentUpper) {
-
   }
 
   if (Style == FloatStyle::Percent) N *= 100.0;

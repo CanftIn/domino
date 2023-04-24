@@ -29,6 +29,7 @@ include_directories(include)
 # Create the domino C++ library
 set(domino_SRCS
   lib/http/UriParser.cc
+  lib/support/NativeFormatting.cc
   lib/util/StringRef.cc
 )
 

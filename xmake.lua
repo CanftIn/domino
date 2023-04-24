@@ -35,7 +35,12 @@ target("util")
     set_kind("object")
     add_files("lib/util/*.cc")
 
+target("support")
+    set_kind("object")
+    add_files("lib/support/*.cc")
+
 target("domino")
     set_kind("$(kind)")
     add_deps("http")
     add_deps("util")
+    add_deps("support")
