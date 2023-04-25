@@ -1,8 +1,9 @@
 #ifndef DOMINO_UTIL_ARRAYREF_H_
 #define DOMINO_UTIL_ARRAYREF_H_
 
-#include <domino/util/SmallVector.h>
+#include <domino/util/Hashing.h>
 #include <domino/util/STLExtras.h>
+#include <domino/util/SmallVector.h>
 
 #include <array>
 #include <initializer_list>
@@ -350,6 +351,11 @@ bool operator!=(domino::ArrayRef<T> a1, const std::vector<T>& a2) {
 }
 
 using IntArrayRef = ArrayRef<int64_t>;
+
+template <typename T>
+hash_code hash_value(ArrayRef<T> S) {
+  return hash_combine_range(S.begin(), S.end());
+}
 
 }  // namespace domino
 

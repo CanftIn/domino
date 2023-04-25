@@ -1,9 +1,46 @@
 #ifndef DOMINO_UTIL_STRINGEXTRAS_H_
 #define DOMINO_UTIL_STRINGEXTRAS_H_
 
+#include <domino/util/ArrayRef.h>
+#include <domino/util/SmallString.h>
+
+#include <cstddef>
 #include <cstdint>
 
 namespace domino {
+
+class raw_ostream;
+
+/// hexdigit - Return the hexadecimal character for the
+/// given number \p X (which should be less than 16).
+inline char hexdigit(unsigned X, bool LowerCase = false) {
+  assert(X < 16);
+  static const char LUT[] = "0123456789ABCDEF";
+  const uint8_t Offset = LowerCase ? 32 : 0;
+  return LUT[X] | Offset;
+}
+
+/// Given an array of c-style strings terminated by a null pointer, construct
+/// a vector of StringRefs representing the same strings without the terminating
+/// null string.
+inline std::vector<StringRef> toStringRefArray(const char *const *Strings) {
+  std::vector<StringRef> Result;
+  while (*Strings) Result.push_back(*Strings++);
+  return Result;
+}
+
+/// Construct a string ref from a boolean.
+inline StringRef toStringRef(bool B) { return StringRef(B ? "true" : "false"); }
+
+/// Construct a string ref from an array ref of unsigned chars.
+inline StringRef toStringRef(ArrayRef<uint8_t> Input) {
+  return StringRef(reinterpret_cast<const char *>(Input.begin()), Input.size());
+}
+
+/// Construct a string ref from an array ref of unsigned chars.
+inline ArrayRef<uint8_t> arrayRefFromStringRef(StringRef Input) {
+  return {Input.bytes_begin(), Input.bytes_end()};
+}
 
 /// Interpret the given character \p C as a hexadecimal digit and return its
 /// value.
@@ -75,6 +112,30 @@ inline char toLower(char x) {
 inline char toUpper(char x) {
   if (x >= 'a' && x <= 'z') return x - 'a' + 'A';
   return x;
+}
+
+/// Convert buffer \p Input to its hexadecimal representation.
+/// The returned string is double the size of \p Input.
+inline void toHex(ArrayRef<uint8_t> Input, bool LowerCase,
+                  SmallVectorImpl<char> &Output) {
+  const size_t Length = Input.size();
+  Output.resize_for_overwrite(Length * 2);
+
+  for (size_t i = 0; i < Length; i++) {
+    const uint8_t c = Input[i];
+    Output[i * 2] = hexdigit(c >> 4, LowerCase);
+    Output[i * 2 + 1] = hexdigit(c & 15, LowerCase);
+  }
+}
+
+inline std::string toHex(ArrayRef<uint8_t> Input, bool LowerCase = false) {
+  SmallString<16> Output;
+  toHex(Input, LowerCase, Output);
+  return std::string(Output);
+}
+
+inline std::string toHex(StringRef Input, bool LowerCase = false) {
+  return toHex(arrayRefFromStringRef(Input), LowerCase);
 }
 
 }  // namespace domino

@@ -13,6 +13,15 @@ namespace domino {
 #define DOMINO_UNLIKELY(expr) (expr)
 #endif
 
-}
+#if __has_builtin(__builtin_assume_aligned) || defined(__GNUC__)
+#define DOMINO_ASSUME_ALIGNED(p, a) __builtin_assume_aligned(p, a)
+#elif defined(DOMINO_BUILTIN_UNREACHABLE)
+#define DOMINO_ASSUME_ALIGNED(p, a) \
+  (((uintptr_t(p) % (a)) == 0) ? (p) : (DOMINO_BUILTIN_UNREACHABLE, (p)))
+#else
+#define DOMINO_ASSUME_ALIGNED(p, a) (p)
+#endif
+
+}  // namespace domino
 
 #endif  // DOMINO_UTIL_MACROS_H_
