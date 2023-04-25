@@ -1,5 +1,5 @@
 #ifndef DOMINO_UTIL_DENSEMAPINFO_H_
-#define DOMINO_UTIL_DENSEMAPINOF_H_
+#define DOMINO_UTIL_DENSEMAPINFO_H_
 
 #include <cassert>
 #include <cstddef>
