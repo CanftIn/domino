@@ -61,9 +61,9 @@ void Twine::printOneChild(raw_ostream &OS, Child Ptr,
   case Twine::PtrAndLengthKind:
     OS << StringRef(Ptr.ptrAndLength.ptr, Ptr.ptrAndLength.length);
     break;
-  case Twine::FormatvObjectKind:
-    OS << *Ptr.formatvObject;
-    break;
+  //case Twine::FormatvObjectKind:
+  //  OS << *Ptr.formatvObject;
+  //  break;
   case Twine::CharKind:
     OS << Ptr.character;
     break;
@@ -114,9 +114,9 @@ void Twine::printOneChildRepr(raw_ostream &OS, Child Ptr,
     OS << "ptrAndLength:\""
        << StringRef(Ptr.ptrAndLength.ptr, Ptr.ptrAndLength.length) << "\"";
     break;
-  case Twine::FormatvObjectKind:
-    OS << "formatv:\"" << *Ptr.formatvObject << "\"";
-    break;
+  //case Twine::FormatvObjectKind:
+  //  OS << "formatv:\"" << *Ptr.formatvObject << "\"";
+  //  break;
   case Twine::CharKind:
     OS << "char:\"" << Ptr.character << "\"";
     break;
