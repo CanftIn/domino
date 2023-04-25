@@ -3,6 +3,7 @@
 
 #include <domino/support/SwapByteOrder.h>
 #include <domino/support/TypeTraits.h>
+#include <domino/util/Logging.h>
 
 #include <algorithm>
 #include <cassert>
@@ -14,7 +15,8 @@
 
 namespace domino {
 
-template <typename T, typename Enable> struct DenseMapInfo;
+template <typename T, typename Enable>
+struct DenseMapInfo;
 
 /// \code
 ///   using domino::hash_value;
@@ -23,7 +25,7 @@ template <typename T, typename Enable> struct DenseMapInfo;
 class hash_code {
   size_t value;
 
-public:
+ public:
   hash_code() = default;
 
   hash_code(size_t value) : value(value) {}
@@ -44,7 +46,8 @@ public:
 template <typename T>
 std::enable_if_t<is_integral_or_enum<T>::value, hash_code> hash_value(T value);
 
-template <typename T> hash_code hash_value(const T *ptr);
+template <typename T>
+hash_code hash_value(const T *ptr);
 
 template <typename T, typename U>
 hash_code hash_value(const std::pair<T, U> &arg);
@@ -55,7 +58,8 @@ hash_code hash_value(const std::tuple<Ts...> &arg);
 template <typename T>
 hash_code hash_value(const std::basic_string<T> &arg);
 
-template <typename T> hash_code hash_value(const std::optional<T> &arg);
+template <typename T>
+hash_code hash_value(const std::optional<T> &arg);
 
 /// Override the execution seed with a fixed value.
 ///
@@ -79,16 +83,14 @@ namespace detail {
 inline uint64_t fetch64(const char *p) {
   uint64_t result;
   memcpy(&result, p, sizeof(result));
-  if (sys::IsBigEndianHost)
-    sys::swapByteOrder(result);
+  if (sys::IsBigEndianHost) sys::swapByteOrder(result);
   return result;
 }
 
 inline uint32_t fetch32(const char *p) {
   uint32_t result;
   memcpy(&result, p, sizeof(result));
-  if (sys::IsBigEndianHost)
-    sys::swapByteOrder(result);
+  if (sys::IsBigEndianHost) sys::swapByteOrder(result);
   return result;
 }
 
@@ -106,9 +108,7 @@ inline uint64_t rotate(uint64_t val, size_t shift) {
   return shift == 0 ? val : ((val >> shift) | (val << (64 - shift)));
 }
 
-inline uint64_t shift_mix(uint64_t val) {
-  return val ^ (val >> 47);
-}
+inline uint64_t shift_mix(uint64_t val) { return val ^ (val >> 47); }
 
 inline uint64_t hash_16_bytes(uint64_t low, uint64_t high) {
   // Murmur-inspired hashing.
@@ -174,16 +174,11 @@ inline uint64_t hash_33to64_bytes(const char *s, size_t len, uint64_t seed) {
 }
 
 inline uint64_t hash_short(const char *s, size_t length, uint64_t seed) {
-  if (length >= 4 && length <= 8)
-    return hash_4to8_bytes(s, length, seed);
-  if (length > 8 && length <= 16)
-    return hash_9to16_bytes(s, length, seed);
-  if (length > 16 && length <= 32)
-    return hash_17to32_bytes(s, length, seed);
-  if (length > 32)
-    return hash_33to64_bytes(s, length, seed);
-  if (length != 0)
-    return hash_1to3_bytes(s, length, seed);
+  if (length >= 4 && length <= 8) return hash_4to8_bytes(s, length, seed);
+  if (length > 8 && length <= 16) return hash_9to16_bytes(s, length, seed);
+  if (length > 16 && length <= 32) return hash_17to32_bytes(s, length, seed);
+  if (length > 32) return hash_33to64_bytes(s, length, seed);
+  if (length != 0) return hash_1to3_bytes(s, length, seed);
 
   return k2 ^ seed;
 }
@@ -198,9 +193,13 @@ struct hash_state {
   /// seed and the first 64-byte chunk.
   /// This effectively performs the initial mix.
   static hash_state create(const char *s, uint64_t seed) {
-    hash_state state = {
-      0, seed, hash_16_bytes(seed, k1), rotate(seed ^ k1, 49),
-      seed * k1, shift_mix(seed), 0 };
+    hash_state state = {0,
+                        seed,
+                        hash_16_bytes(seed, k1),
+                        rotate(seed ^ k1, 49),
+                        seed * k1,
+                        shift_mix(seed),
+                        0};
     state.h6 = hash_16_bytes(state.h4, state.h5);
     state.mix(s);
     return state;
@@ -244,7 +243,6 @@ struct hash_state {
   }
 };
 
-
 /// A global, fixed seed-override variable.
 ///
 /// This variable can be set using the \see domino::set_fixed_execution_seed
@@ -264,7 +262,6 @@ inline uint64_t get_execution_seed() {
   return seed;
 }
 
-
 /// Trait to indicate whether a type's bits can be hashed directly.
 ///
 /// A type trait which is true if we want to combine values for hashing by
@@ -277,34 +274,35 @@ inline uint64_t get_execution_seed() {
 // for equality. For all the platforms we care about, this holds for integers
 // and pointers, but there are platforms where it doesn't and we would like to
 // support user-defined types which happen to satisfy this property.
-template <typename T> struct is_hashable_data
-  : std::integral_constant<bool, ((is_integral_or_enum<T>::value ||
-                                   std::is_pointer<T>::value) &&
-                                  64 % sizeof(T) == 0)> {};
+template <typename T>
+struct is_hashable_data
+    : std::integral_constant<bool, ((is_integral_or_enum<T>::value ||
+                                     std::is_pointer<T>::value) &&
+                                    64 % sizeof(T) == 0)> {};
 
 // Special case std::pair to detect when both types are viable and when there
 // is no alignment-derived padding in the pair. This is a bit of a lie because
 // std::pair isn't truly POD, but it's close enough in all reasonable
 // implementations for our use case of hashing the underlying data.
-template <typename T, typename U> struct is_hashable_data<std::pair<T, U> >
-  : std::integral_constant<bool, (is_hashable_data<T>::value &&
-                                  is_hashable_data<U>::value &&
-                                  (sizeof(T) + sizeof(U)) ==
-                                   sizeof(std::pair<T, U>))> {};
+template <typename T, typename U>
+struct is_hashable_data<std::pair<T, U> >
+    : std::integral_constant<
+          bool, (is_hashable_data<T>::value && is_hashable_data<U>::value &&
+                 (sizeof(T) + sizeof(U)) == sizeof(std::pair<T, U>))> {};
 
 /// Helper to get the hashable data representation for a type.
 /// This variant is enabled when the type itself can be used.
 template <typename T>
-std::enable_if_t<is_hashable_data<T>::value, T>
-get_hashable_data(const T &value) {
+std::enable_if_t<is_hashable_data<T>::value, T> get_hashable_data(
+    const T &value) {
   return value;
 }
 /// Helper to get the hashable data representation for a type.
 /// This variant is enabled when we must first call hash_value and use the
 /// result as our data.
 template <typename T>
-std::enable_if_t<!is_hashable_data<T>::value, size_t>
-get_hashable_data(const T &value) {
+std::enable_if_t<!is_hashable_data<T>::value, size_t> get_hashable_data(
+    const T &value) {
   using ::domino::hash_value;
   return hash_value(value);
 }
@@ -317,11 +315,10 @@ get_hashable_data(const T &value) {
 /// copies the underlying bytes of value into the buffer, advances the
 /// buffer_ptr past the copied bytes, and returns true.
 template <typename T>
-bool store_and_advance(char *&buffer_ptr, char *buffer_end, const T& value,
+bool store_and_advance(char *&buffer_ptr, char *buffer_end, const T &value,
                        size_t offset = 0) {
   size_t store_size = sizeof(value) - offset;
-  if (buffer_ptr + store_size > buffer_end)
-    return false;
+  if (buffer_ptr + store_size > buffer_end) return false;
   const char *value_data = reinterpret_cast<const char *>(&value);
   memcpy(buffer_ptr, value_data + offset, store_size);
   buffer_ptr += store_size;
@@ -338,11 +335,10 @@ hash_code hash_combine_range_impl(InputIteratorT first, InputIteratorT last) {
   const uint64_t seed = get_execution_seed();
   char buffer[64], *buffer_ptr = buffer;
   char *const buffer_end = std::end(buffer);
-  while (first != last && store_and_advance(buffer_ptr, buffer_end,
-                                            get_hashable_data(*first)))
+  while (first != last &&
+         store_and_advance(buffer_ptr, buffer_end, get_hashable_data(*first)))
     ++first;
-  if (first == last)
-    return hash_short(buffer, buffer_ptr - buffer, seed);
+  if (first == last) return hash_short(buffer, buffer_ptr - buffer, seed);
   assert(buffer_ptr == buffer_end);
 
   hash_state state = state.create(buffer, seed);
@@ -351,8 +347,8 @@ hash_code hash_combine_range_impl(InputIteratorT first, InputIteratorT last) {
     // Fill up the buffer. We don't clear it, which re-mixes the last round
     // when only a partial 64-byte chunk is left.
     buffer_ptr = buffer;
-    while (first != last && store_and_advance(buffer_ptr, buffer_end,
-                                              get_hashable_data(*first)))
+    while (first != last &&
+           store_and_advance(buffer_ptr, buffer_end, get_hashable_data(*first)))
       ++first;
 
     // Rotate the buffer if we did a partial fill in order to simulate doing
@@ -383,8 +379,7 @@ hash_combine_range_impl(ValueT *first, ValueT *last) {
   const char *s_begin = reinterpret_cast<const char *>(first);
   const char *s_end = reinterpret_cast<const char *>(last);
   const size_t length = std::distance(s_begin, s_end);
-  if (length <= 64)
-    return hash_short(s_begin, length, seed);
+  if (length <= 64) return hash_short(s_begin, length, seed);
 
   const char *s_aligned_end = s_begin + (length & ~63);
   hash_state state = state.create(s_begin, seed);
@@ -393,15 +388,13 @@ hash_combine_range_impl(ValueT *first, ValueT *last) {
     state.mix(s_begin);
     s_begin += 64;
   }
-  if (length & 63)
-    state.mix(s_end - 64);
+  if (length & 63) state.mix(s_end - 64);
 
   return state.finalize(length);
 }
 
-} // namespace detail
-} // namespace hashing
-
+}  // namespace detail
+}  // namespace hashing
 
 /// Compute a hash_code for a sequence of values.
 ///
@@ -413,7 +406,6 @@ template <typename InputIteratorT>
 hash_code hash_combine_range(InputIteratorT first, InputIteratorT last) {
   return ::domino::hashing::detail::hash_combine_range_impl(first, last);
 }
-
 
 // Implementation details for hash_combine.
 namespace hashing {
@@ -431,13 +423,12 @@ struct hash_combine_recursive_helper {
   hash_state state;
   const uint64_t seed;
 
-public:
+ public:
   /// Construct a recursive hash combining helper.
   ///
   /// This sets up the state for a recursive hash combine, including getting
   /// the seed and buffer setup.
-  hash_combine_recursive_helper()
-    : seed(get_execution_seed()) {}
+  hash_combine_recursive_helper() : seed(get_execution_seed()) {}
 
   /// Combine one chunk of data into the current in-flight hash.
   ///
@@ -446,7 +437,8 @@ public:
   /// hash_state, empties it, and then merges the new chunk in. This also
   /// handles cases where the data straddles the end of the buffer.
   template <typename T>
-  char *combine_data(size_t &length, char *buffer_ptr, char *buffer_end, T data) {
+  char *combine_data(size_t &length, char *buffer_ptr, char *buffer_end,
+                     T data) {
     if (!store_and_advance(buffer_ptr, buffer_end, data)) {
       // Check for skew which prevents the buffer from being packed, and do
       // a partial store into the buffer to fill it. This is only a concern
@@ -473,9 +465,8 @@ public:
 
       // Try again to store into the buffer -- this cannot fail as we only
       // store types smaller than the buffer.
-      if (!store_and_advance(buffer_ptr, buffer_end, data,
-                             partial_store_size))
-        domino_unreachable("buffer smaller than stored type");
+      if (!store_and_advance(buffer_ptr, buffer_end, data, partial_store_size))
+        DOMINO_ERROR_ABORT("buffer smaller than stored type");
     }
     return buffer_ptr;
   }
@@ -484,10 +475,11 @@ public:
   ///
   /// This function recurses through each argument, combining that argument
   /// into a single hash.
-  template <typename T, typename ...Ts>
+  template <typename T, typename... Ts>
   hash_code combine(size_t length, char *buffer_ptr, char *buffer_end,
                     const T &arg, const Ts &...args) {
-    buffer_ptr = combine_data(length, buffer_ptr, buffer_end, get_hashable_data(arg));
+    buffer_ptr =
+        combine_data(length, buffer_ptr, buffer_end, get_hashable_data(arg));
 
     // Recurse to the next argument.
     return combine(length, buffer_ptr, buffer_end, args...);
@@ -501,8 +493,7 @@ public:
   hash_code combine(size_t length, char *buffer_ptr, char *buffer_end) {
     // Check whether the entire set of values fit in the buffer. If so, we'll
     // use the optimized short hashing routine and skip state entirely.
-    if (length == 0)
-      return hash_short(buffer, buffer_ptr - buffer, seed);
+    if (length == 0) return hash_short(buffer, buffer_ptr - buffer, seed);
 
     // Mix the final buffer, rotating it if we did a partial fill in order to
     // simulate doing a mix of the last 64-bytes. That is how the algorithm
@@ -518,8 +509,8 @@ public:
   }
 };
 
-} // namespace detail
-} // namespace hashing
+}  // namespace detail
+}  // namespace hashing
 
 /// Combine values into a single hash_code.
 ///
@@ -532,7 +523,8 @@ public:
 /// The result is suitable for returning from a user's hash_value
 /// *implementation* for their user-defined type. Consumers of a type should
 /// *not* call this routine, they should instead call 'hash_value'.
-template <typename ...Ts> hash_code hash_combine(const Ts &...args) {
+template <typename... Ts>
+hash_code hash_combine(const Ts &...args) {
   // Recursively hash each argument using a helper class.
   ::domino::hashing::detail::hash_combine_recursive_helper helper;
   return helper.combine(0, helper.buffer, helper.buffer + 64, args...);
@@ -556,8 +548,8 @@ inline hash_code hash_integer_value(uint64_t value) {
   return hash_16_bytes(seed + (a << 3), fetch32(s + 4));
 }
 
-} // namespace detail
-} // namespace hashing
+}  // namespace detail
+}  // namespace hashing
 
 // Declared and documented above, but defined here so that any of the hashing
 // infrastructure is available.
@@ -569,9 +561,10 @@ std::enable_if_t<is_integral_or_enum<T>::value, hash_code> hash_value(T value) {
 
 // Declared and documented above, but defined here so that any of the hashing
 // infrastructure is available.
-template <typename T> hash_code hash_value(const T *ptr) {
+template <typename T>
+hash_code hash_value(const T *ptr) {
   return ::domino::hashing::detail::hash_integer_value(
-    reinterpret_cast<uintptr_t>(ptr));
+      reinterpret_cast<uintptr_t>(ptr));
 }
 
 // Declared and documented above, but defined here so that any of the hashing
@@ -581,7 +574,8 @@ hash_code hash_value(const std::pair<T, U> &arg) {
   return hash_combine(arg.first, arg.second);
 }
 
-template <typename... Ts> hash_code hash_value(const std::tuple<Ts...> &arg) {
+template <typename... Ts>
+hash_code hash_value(const std::tuple<Ts...> &arg) {
   return std::apply([](const auto &...xs) { return hash_combine(xs...); }, arg);
 }
 
@@ -592,17 +586,19 @@ hash_code hash_value(const std::basic_string<T> &arg) {
   return hash_combine_range(arg.begin(), arg.end());
 }
 
-template <typename T> hash_code hash_value(const std::optional<T> &arg) {
+template <typename T>
+hash_code hash_value(const std::optional<T> &arg) {
   return arg ? hash_combine(true, *arg) : hash_value(false);
 }
 
-template <> struct DenseMapInfo<hash_code, void> {
+template <>
+struct DenseMapInfo<hash_code, void> {
   static inline hash_code getEmptyKey() { return hash_code(-1); }
   static inline hash_code getTombstoneKey() { return hash_code(-2); }
   static unsigned getHashValue(hash_code val) { return val; }
   static bool isEqual(hash_code LHS, hash_code RHS) { return LHS == RHS; }
 };
 
-}
+}  // namespace domino
 
 #endif  // DOMINO_UTIL_HASHING_H_
