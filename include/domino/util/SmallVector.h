@@ -567,6 +567,12 @@ class SmallVectorImpl : public SmallVectorTemplateBase<T> {
   /// Like resize, but \ref T is POD, the new values won't be initialized.
   void resize_for_overwrite(size_type N) { resizeImpl<true>(N); }
 
+  void truncate(size_type N) {
+    assert(this->size() >= N && "Cannot increase size with truncate");
+    this->destroy_range(this->begin() + N, this->end());
+    this->set_size(N);
+  }
+
   void resize(size_type N, ValueParamT NV) {
     if (N == this->size()) return;
 
