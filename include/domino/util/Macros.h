@@ -22,6 +22,8 @@ namespace domino {
 #define DOMINO_ASSUME_ALIGNED(p, a) (p)
 #endif
 
+#define DOMINO_WINDOWS_PREFER_FORWARD_SLASH 0
+
 }  // namespace domino
 
 #endif  // DOMINO_UTIL_MACROS_H_
