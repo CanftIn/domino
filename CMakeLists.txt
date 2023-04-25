@@ -17,8 +17,8 @@ set(project_version "${${PROJECT_NAME}_VERSION}")
 message(STATUS "Project '${PROJECT_NAME}', version: '${project_version}'")
 
 option(DOMINO_OPT_BUILD_UNITTESTS "Build all domino unittests" ON)
-option(ENABLE_CTEST "Enables testing" ON)
-option(DOMINO_BENCHMARK "Enables benchmark" ON)
+option(ENABLE_CTEST "Enables testing" OFF)
+option(DOMINO_BENCHMARK "Enables benchmark" OFF)
 
 # CMake helpers:
 include(GNUInstallDirs)
@@ -29,8 +29,21 @@ include_directories(include)
 # Create the domino C++ library
 set(domino_SRCS
   lib/http/UriParser.cc
+  lib/support/Error.cc
+  lib/support/FormatVariadic.cc
   lib/support/NativeFormatting.cc
+  lib/support/Process.cc
+  lib/support/Program.cc
+  lib/support/raw_ostream.cc
+  lib/support/hash/MD5.cc
+  lib/support/hash/SHA1.cc
+  lib/support/hash/SHA256.cc
+  lib/support/filesystem/Errno.cc
+  lib/support/filesystem/Path.cc
   lib/util/StringRef.cc
+  lib/util/Twine.cc
+  lib/util/Hashing.cc
+  lib/util/StringExtras.cc
 )
 
 set(STATIC_LIB_NAME ${PROJECT_NAME})
