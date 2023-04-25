@@ -59,12 +59,11 @@ static const char colorcodes[2][2][8][10] = {
     {ALLCOLORS("3", ""), ALLCOLORS("3", "1;")},
     {ALLCOLORS("4", ""), ALLCOLORS("4", "1;")}};
 
-// TODO: define
-static bool coreFilesPrevented = true;
-
 bool Process::AreCoreFilesPrevented() { return coreFilesPrevented; }
 
 // TODO: make robust
 [[noreturn]] void Process::Exit(int RetCode, bool NoCleanup) {
   ::exit(RetCode);
 }
+
+#include "Process.inc"

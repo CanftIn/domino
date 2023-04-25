@@ -38,6 +38,8 @@ target("util")
 target("support")
     set_kind("object")
     add_files("lib/support/*.cc")
+    add_files("lib/support/filesystem/*.cc")
+    add_files("lib/support/hash/*.cc")
 
 target("domino")
     set_kind("$(kind)")

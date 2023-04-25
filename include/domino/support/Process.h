@@ -189,6 +189,10 @@ class Process {
   [[noreturn]] static void ExitNoCleanup(int RetCode);
 };
 
+
+// TODO: define
+static bool coreFilesPrevented = true;
+
 }  // namespace sys
 }  // namespace domino
 
