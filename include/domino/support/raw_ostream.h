@@ -18,6 +18,7 @@
 namespace domino {
 
 class Duration;
+class formatv_object_base;
 class format_object_base;
 class FormattedString;
 class FormattedNumber;
@@ -192,7 +193,7 @@ class raw_ostream {
   raw_ostream& operator<<(Colors C);
 
   using uuid_t = uint8_t[16];
-  raw_ostream& write_uuid(const uuid_t& UUID);
+  raw_ostream& write_uuid(const uuid_t UUID);
 
   raw_ostream& write_escaped(StringRef Str, bool UseHexEscapes = false);
 
@@ -200,6 +201,8 @@ class raw_ostream {
   raw_ostream& write(const char* Ptr, size_t Size);
 
   raw_ostream& operator<<(const format_object_base& Fmt);
+
+  raw_ostream& operator<<(const formatv_object_base& Fmt);
 
   raw_ostream& operator<<(const FormattedString& Fmt);
 
@@ -209,7 +212,7 @@ class raw_ostream {
 
   raw_ostream& indent(unsigned NumSpaces);
 
-  raw_ostream& write_zero(unsigned NumZeroes);
+  raw_ostream& write_zeros(unsigned NumZeroes);
 
   virtual raw_ostream& changeColor(enum Colors Colors, bool Bold = false,
                                    bool BG = false);
@@ -284,7 +287,7 @@ class raw_pwrite_stream : public raw_ostream {
 class raw_fd_ostream : public raw_pwrite_stream {
   int FD;
   bool ShouldClose;
-  bool SupportSeeking = false;
+  bool SupportsSeeking = false;
   bool IsRegularFile = false;
   mutable std::optional<bool> HasColors;
   std::error_code EC;
@@ -324,7 +327,7 @@ class raw_fd_ostream : public raw_pwrite_stream {
 
   void close();
 
-  bool supportsSeeking() const { return SupportSeeking; }
+  bool supportsSeeking() const { return SupportsSeeking; }
 
   bool is_regular_file() const { return IsRegularFile; }
 
@@ -385,7 +388,7 @@ class raw_svector_ostream : public raw_pwrite_stream {
 
   void pwrite_impl(const char* Ptr, size_t Size, uint64_t Offset) override;
 
-  uint64_t current_pos() const override { return OS.size(); }
+  uint64_t current_pos() const override;
 
  public:
   explicit raw_svector_ostream(SmallVectorImpl<char>& O) : OS(O) {
@@ -408,7 +411,7 @@ class raw_null_ostream : public raw_pwrite_stream {
 
   void pwrite_impl(const char* Ptr, size_t Size, uint64_t Offset) override;
 
-  uint64_t current_pos() const override { return 0; }
+  uint64_t current_pos() const override;
 
  public:
   explicit raw_null_ostream() = default;
@@ -444,7 +447,7 @@ class buffer_unique_ostream : public raw_svector_ostream {
 class Error;
 
 Error writeToOutput(StringRef OutputFileName,
-                    function_ref<Error(raw_ostream&)> WriteFn);
+                    std::function<Error(raw_ostream&)> WriteFn);
 
 raw_ostream& operator<<(raw_ostream& OS, std::nullopt_t);
 
