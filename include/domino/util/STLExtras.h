@@ -338,14 +338,15 @@ template <typename T, typename... Ts>
 using is_one_of = std::disjunction<std::is_same<T, Ts>...>;
 
 namespace detail {
-template <class, template <class...> class Op, class... Args> struct detector {
+template <class, template <class...> class Op, class... Args>
+struct detector {
   using value_t = std::false_type;
 };
 template <template <class...> class Op, class... Args>
 struct detector<std::void_t<Op<Args...>>, Op, Args...> {
   using value_t = std::true_type;
 };
-} // end namespace detail
+}  // end namespace detail
 
 /// Detects if a given trait holds for some set of arguments 'Args'.
 /// For example, the given trait could be used to detect if a given type
@@ -356,6 +357,50 @@ struct detector<std::void_t<Op<Args...>>, Op, Args...> {
 ///   bool fooHasCopyAssign = is_detected<has_copy_assign_t, FooClass>::value;
 template <template <class...> class Op, class... Args>
 using is_detected = typename detail::detector<void, Op, Args...>::value_t;
+
+template <typename R, typename OutputIt>
+OutputIt copy(R &&Range, OutputIt Out) {
+  return std::copy(adl_begin(Range), adl_end(Range), Out);
+}
+
+/// Provide wrappers to std::replace_copy_if which take ranges instead of having
+/// to pass begin/end explicitly.
+template <typename R, typename OutputIt, typename UnaryPredicate, typename T>
+OutputIt replace_copy_if(R &&Range, OutputIt Out, UnaryPredicate P,
+                         const T &NewValue) {
+  return std::replace_copy_if(adl_begin(Range), adl_end(Range), Out, P,
+                              NewValue);
+}
+
+/// Provide wrappers to std::replace_copy which take ranges instead of having to
+/// pass begin/end explicitly.
+template <typename R, typename OutputIt, typename T>
+OutputIt replace_copy(R &&Range, OutputIt Out, const T &OldValue,
+                      const T &NewValue) {
+  return std::replace_copy(adl_begin(Range), adl_end(Range), Out, OldValue,
+                           NewValue);
+}
+
+/// Provide wrappers to std::move which take ranges instead of having to
+/// pass begin/end explicitly.
+template <typename R, typename OutputIt>
+OutputIt move(R &&Range, OutputIt Out) {
+  return std::move(adl_begin(Range), adl_end(Range), Out);
+}
+
+/// Wrapper function around std::find to detect if an element exists
+/// in a container.
+template <typename R, typename E>
+bool is_contained(R &&Range, const E &Element) {
+  return std::find(adl_begin(Range), adl_end(Range), Element) != adl_end(Range);
+}
+
+template <typename T>
+constexpr bool is_contained(std::initializer_list<T> Set, T Value) {
+  for (T V : Set)
+    if (V == Value) return true;
+  return false;
+}
 
 }  // namespace domino
 

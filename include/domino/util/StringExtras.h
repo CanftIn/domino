@@ -138,6 +138,12 @@ inline std::string toHex(StringRef Input, bool LowerCase = false) {
   return toHex(arrayRefFromStringRef(Input), LowerCase);
 }
 
+std::pair<StringRef, StringRef> getToken(StringRef Source,
+                                         StringRef Delimiters = " \t\n\v\f\r");
+
+void SplitString(StringRef Source, SmallVectorImpl<StringRef> &OutFragments,
+                 StringRef Delimiters = " \t\n\v\f\r");
+
 }  // namespace domino
 
 #endif  // DOMINO_UTIL_STRINGEXTRAS_H_
