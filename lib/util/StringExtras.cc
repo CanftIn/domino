@@ -1,6 +1,6 @@
 #include <domino/util/StringExtras.h>
 
-using namespace domino;
+namespace domino {
 
 std::pair<StringRef, StringRef> getToken(StringRef Source,
                                          StringRef Delimiters) {
@@ -20,6 +20,8 @@ void SplitString(StringRef Source, SmallVectorImpl<StringRef> &OutFragments,
   std::pair<StringRef, StringRef> S = domino::getToken(Source, Delimiters);
   while (!S.first.empty()) {
     OutFragments.push_back(S.first);
-    S = domino::getToken(S.second, Delimiters);
+    S = getToken(S.second, Delimiters);
   }
 }
+
+} // namespace domino

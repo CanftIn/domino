@@ -32,7 +32,7 @@ class ArrayRef {
  private:
   const T* Data = nullptr;
 
-  size_type Length;
+  size_type Length = 0;
 
   void debugCheckNullptrInvariant() const {
     assert((Data != nullptr) ||

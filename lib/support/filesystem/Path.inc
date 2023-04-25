@@ -881,37 +881,10 @@ bool home_directory(SmallVectorImpl<char> &result) {
 }
 
 static bool getDarwinConfDir(bool TempDir, SmallVectorImpl<char> &Result) {
-#if defined(_CS_DARWIN_USER_TEMP_DIR) && defined(_CS_DARWIN_USER_CACHE_DIR)
-  // On Darwin, use DARWIN_USER_TEMP_DIR or DARWIN_USER_CACHE_DIR.
-  // macros defined in <unistd.h> on darwin >= 9
-  int ConfName = TempDir ? _CS_DARWIN_USER_TEMP_DIR : _CS_DARWIN_USER_CACHE_DIR;
-  size_t ConfLen = confstr(ConfName, nullptr, 0);
-  if (ConfLen > 0) {
-    do {
-      Result.resize(ConfLen);
-      ConfLen = confstr(ConfName, Result.data(), Result.size());
-    } while (ConfLen > 0 && ConfLen != Result.size());
-
-    if (ConfLen > 0) {
-      assert(Result.back() == 0);
-      Result.pop_back();
-      return true;
-    }
-
-    Result.clear();
-  }
-#endif
   return false;
 }
 
 bool user_config_directory(SmallVectorImpl<char> &result) {
-#ifdef __APPLE__
-  // Mac: ~/Library/Preferences/
-  if (home_directory(result)) {
-    append(result, "Library", "Preferences");
-    return true;
-  }
-#else
   // XDG_CONFIG_HOME as defined in the XDG Base Directory Specification:
   // http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
   if (const char *RequestedDir = getenv("XDG_CONFIG_HOME")) {
@@ -919,7 +892,7 @@ bool user_config_directory(SmallVectorImpl<char> &result) {
     result.append(RequestedDir, RequestedDir + strlen(RequestedDir));
     return true;
   }
-#endif
+
   // Fallback: ~/.config
   if (!home_directory(result)) {
     return false;
@@ -929,11 +902,6 @@ bool user_config_directory(SmallVectorImpl<char> &result) {
 }
 
 bool cache_directory(SmallVectorImpl<char> &result) {
-#ifdef __APPLE__
-  if (getDarwinConfDir(false /*tempDir*/, result)) {
-    return true;
-  }
-#else
   // XDG_CACHE_HOME as defined in the XDG Base Directory Specification:
   // http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
   if (const char *RequestedDir = getenv("XDG_CACHE_HOME")) {
@@ -941,7 +909,7 @@ bool cache_directory(SmallVectorImpl<char> &result) {
     result.append(RequestedDir, RequestedDir + strlen(RequestedDir));
     return true;
   }
-#endif
+
   if (!home_directory(result)) {
     return false;
   }
@@ -986,55 +954,9 @@ void system_temp_directory(bool ErasedOnReboot, SmallVectorImpl<char> &Result) {
   Result.append(RequestedDir, RequestedDir + strlen(RequestedDir));
 }
 
-}  // end namespace path
+}  // namespace path
 
-namespace fs {
-
-#ifdef __APPLE__
-/// This implementation tries to perform an APFS CoW clone of the file,
-/// which can be much faster and uses less space.
-/// Unfortunately fcopyfile(3) does not support COPYFILE_CLONE, so the
-/// file descriptor variant of this function still uses the default
-/// implementation.
-std::error_code copy_file(const Twine &From, const Twine &To) {
-  std::string FromS = From.str();
-  std::string ToS = To.str();
-#if __has_builtin(__builtin_available)
-  if (__builtin_available(macos 10.12, *)) {
-    // Optimistically try to use clonefile() and handle errors, rather than
-    // calling stat() to see if it'll work.
-    //
-    // Note: It's okay if From is a symlink. In contrast to the behaviour of
-    // copyfile() with COPYFILE_CLONE, clonefile() clones targets (not the
-    // symlink itself) unless the flag CLONE_NOFOLLOW is passed.
-    if (!clonefile(FromS.c_str(), ToS.c_str(), 0)) return std::error_code();
-
-    auto Errno = errno;
-    switch (Errno) {
-      case EEXIST:   // To already exists.
-      case ENOTSUP:  // Device does not support cloning.
-      case EXDEV:    // From and To are on different devices.
-        break;
-      default:
-        // Anything else will also break copyfile().
-        return std::error_code(Errno, std::generic_category());
-    }
-
-    // TODO: For EEXIST, profile calling fs::generateUniqueName() and
-    // clonefile() in a retry loop (then rename() on success) before falling
-    // back to copyfile(). Depending on the size of the file this could be
-    // cheaper.
-  }
-#endif
-  if (!copyfile(FromS.c_str(), ToS.c_str(), /*State=*/NULL, COPYFILE_DATA))
-    return std::error_code();
-  return std::error_code(errno, std::generic_category());
-}
-#endif  // __APPLE__
-
-}  // end namespace fs
-
-}  // end namespace sys
-}  // end namespace domino
+}  // namespace sys
+}  // namespace domino
 
 #endif  // DOMINO_SUPPORT_FILESYSTEM_PATH_INC_

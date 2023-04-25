@@ -1143,18 +1143,13 @@ Error TempFile::discard() {
   }
   FD = -1;
 
-#ifdef _WIN32
-  // On Windows, closing will remove the file, if we set the delete
-  // disposition. If not, remove it manually.
-  bool Remove = RemoveOnClose;
-#else
   // Always try to remove the file.
   bool Remove = true;
-#endif
+
   std::error_code RemoveEC;
   if (Remove && !TmpName.empty()) {
     RemoveEC = fs::remove(TmpName);
-    sys::DontRemoveFileOnSignal(TmpName);
+    //sys::DontRemoveFileOnSignal(TmpName);
     if (!RemoveEC) TmpName = "";
   } else {
     TmpName = "";
@@ -1175,7 +1170,7 @@ Error TempFile::keep(const Twine &Name) {
     if (RenameEC) remove(TmpName);
   }
 
-  sys::DontRemoveFileOnSignal(TmpName);
+  //sys::DontRemoveFileOnSignal(TmpName);
 
   if (!RenameEC) TmpName = "";
 
@@ -1192,7 +1187,7 @@ Error TempFile::keep() {
   assert(!Done);
   Done = true;
 
-  sys::DontRemoveFileOnSignal(TmpName);
+  //sys::DontRemoveFileOnSignal(TmpName);
 
   TmpName = "";
 
@@ -1216,12 +1211,12 @@ Expected<TempFile> TempFile::create(const Twine &Model, unsigned Mode,
   TempFile Ret(ResultPath, FD);
 
   bool SetSignalHandler = true;
-  if (SetSignalHandler && sys::RemoveFileOnSignal(ResultPath)) {
-    // Make sure we delete the file when RemoveFileOnSignal fails.
-    consumeError(Ret.discard());
-    std::error_code EC(errc::operation_not_permitted);
-    return errorCodeToError(EC);
-  }
+  //if (SetSignalHandler && sys::RemoveFileOnSignal(ResultPath)) {
+  //  // Make sure we delete the file when RemoveFileOnSignal fails.
+  //  consumeError(Ret.discard());
+  //  std::error_code EC(errc::operation_not_permitted);
+  //  return errorCodeToError(EC);
+  //}
   return std::move(Ret);
 }
 }  // namespace fs
