@@ -3,7 +3,6 @@ set_default(get_config("unittests"))
 
 add_requires("gtest")
 add_packages("gtest")
-add_links("gtest_main")
 
 add_includedirs("../include")
 add_deps("domino")
@@ -25,6 +24,21 @@ function all_tests(folds)
 end
 
 for _, test in ipairs(all_tests(folds)) do
+  target(test[1])
+  set_kind("binary")
+  add_files(test[2])
+  add_links("gtest_main")
+  if has_config("memcheck") then
+    on_run(function(target)
+      local argv = {}
+      table.insert(argv, target:targetfile())
+      table.insert(argv, "--leak-check=full")
+      os.execv("valgrind", argv)
+    end)
+  end
+end
+
+for _, test in ipairs(all_tests({"script"})) do
   target(test[1])
   set_kind("binary")
   add_files(test[2])
