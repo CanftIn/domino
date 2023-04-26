@@ -152,8 +152,7 @@ class Parser {
         if (Pos >= json.size() || json[Pos] != '\"') {
           throw std::runtime_error("Expected a string key");
         }
-        auto str = static_cast<StringNode*>(parseString().release());
-        auto key = str->value();
+        auto key = static_cast<StringNode*>(parseString().get())->value();
         skipWhitespace();
         if (Pos >= json.size() || json[Pos] != ':') {
           throw std::runtime_error("Expected a colon");
