@@ -49,7 +49,7 @@ jobs:
       with:
         xmake-version: latest
     - name: pull code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: xmake build and run unittests
       run: |
         xmake b
