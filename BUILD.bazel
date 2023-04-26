@@ -1,0 +1,46 @@
+config_setting(
+	name = 'linux',
+	constraint_values = [
+		"@platforms//os:linux",
+	],
+	visibility = ['//visibility:public'],
+)
+
+cc_library(
+	name = 'domino',
+	hdrs = glob(['include/domino/*']),
+	includes = ['src/include'],
+	visibility = ["//visibility:public"],
+	linkopts = [],
+)
+cc_library(
+	name = 'domino',
+	srcs = [
+		'lib/http/UriParser.cc',
+		'lib/support/Error.cc',
+		'lib/support/FormatVariadic.cc',
+		'lib/support/NativeFormatting.cc',
+		'lib/support/Process.cc',
+		'lib/support/Program.cc',
+		'lib/support/raw_ostream.cc',
+		'lib/support/hash/MD5.cc',
+		'lib/support/hash/SHA1.cc',
+		'lib/support/hash/SHA256.cc',
+		'lib/support/filesystem/Errno.cc',
+		'lib/support/filesystem/Path.cc',
+		'lib/util/StringRef.cc',
+		'lib/util/Twine.cc',
+		'lib/util/Hashing.cc',
+		'lib/util/StringExtras.cc',
+	],
+	hdrs = glob(['include/*/*.h']) + glob(['include/*/*/*.h']),
+	includes = [
+		'include/domino/http',
+		'include/domino/meta',
+		'include/domino/script',
+		'include/domino/support',
+		'include/domino/util',
+	],
+	copts = ['-std=c++17'],
+	visibility = ["//visibility:public"],
+)
