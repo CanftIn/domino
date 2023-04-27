@@ -1,8 +1,7 @@
 #include <domino/script/Lexer.h>
+#include <domino/support/raw_ostream.h>
 #include <domino/util/StringRef.h>
 #include <domino/util/ToString.h>
-
-#include <iostream>
 
 int main() {
   domino::StringRef str(R"(
@@ -26,10 +25,10 @@ def main() {
   while (is_next) {
     domino::script::Token tok = lexer.getCurToken();
     if (tok == domino::script::tok_eof) {
-      std::cout << tok << std::endl;
+      domino::errs() << tok << "\n";
       is_next = false;
     } else {
-      std::cout << (char)tok << std::endl;
+      domino::errs() << tok << "\n";
       lexer.consume(tok);
     }
   }
