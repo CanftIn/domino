@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.6)
 project(
   domino
   VERSION 0.0.1
-  LANGUAGES CXX
+  LANGUAGES C CXX
 )
 
 set(CMAKE_CXX_STANDARD 17)
@@ -16,6 +16,7 @@ message(STATUS "Project '${PROJECT_NAME}', version: '${project_version}'")
 option(DOMINO_OPT_BUILD_UNITTESTS "Build all domino unittests" ON)
 option(DOMINO_OPT_BUILD_BENCHMARK "Build all domino benchmark" OFF)
 option(DOMINO_OPT_BUILD_EXAMPLES "Build all domino examples" ON)
+option(DOMINO_OPT_BUILD_UNITTESTS_SCRIPT "Build domino script" OFF)
 
 # CMake helpers:
 include(GNUInstallDirs)
