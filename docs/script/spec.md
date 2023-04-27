@@ -8,9 +8,9 @@ Block ::= { experssion_list }
 
 experssion_list ::= block_expr ; experssion_list
 
-block_expr ::= Decl | "return" | expr
+block_expr ::= Decl | "return" | Expression
 
-Decl ::= var Identifier [ Type ] = expr
+Decl ::= var Identifier [ Type ] = Expression
 
 Type ::= < shape_list >
 
@@ -18,7 +18,7 @@ shape_list ::= number | number , shape_list
 
 BinOpRHS ::= ('+' Primary)*
 
-Expression ::= Primary BinOpRHS RHS
+Expression ::= Primary BinOpRHS Expression
 
 Primary ::= IdentifierExpr
          |  NumberExpr
@@ -38,4 +38,4 @@ IdentifierExpr ::= Identifier
                 |  Identifier '(' Expression ')'
 
 Return ::= "return" ';'
-        |  "return" expr ';'
+        |  "return" Expression ';'
