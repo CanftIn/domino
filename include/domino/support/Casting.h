@@ -29,12 +29,6 @@ struct simplify_type<const From> {
   }
 };
 
-template <typename From>
-struct is_simple_type {
-  static const bool value =
-      std::is_same<From, typename simplify_type<From>::SimpleType>::value;
-};
-
 template <typename To, typename From, typename Enable = void>
 struct isa_impl {
   static inline bool doit(const From& Val) { return To::classof(&Val); }

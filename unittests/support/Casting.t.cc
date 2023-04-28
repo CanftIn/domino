@@ -61,6 +61,45 @@ struct simplify_type<const PTy> {
 
 using namespace domino;
 
+TEST(CastingTest, SimplifyTypeSimpleType) {
+  int a = 42;
+  simplify_type<int>::SimpleType &simplified_a =
+      simplify_type<int>::getSimplifiedValue(a);
+  ASSERT_EQ(a, simplified_a);
+}
+
+TEST(CastingTest, SimplifyTypeConstSimpleType) {
+  const int a = 42;
+  simplify_type<const int>::SimpleType simplified_a =
+      simplify_type<const int>::getSimplifiedValue(a);
+  ASSERT_EQ(a, simplified_a);
+}
+
+TEST(CastingTest, SimplifyTypePointerType) {
+  int a = 42;
+  int *p_a = &a;
+  simplify_type<int *>::SimpleType &simplified_p_a =
+      simplify_type<int *>::getSimplifiedValue(p_a);
+  ASSERT_EQ(p_a, simplified_p_a);
+}
+
+TEST(CastingTest, SimplifyTypeConstPointerType) {
+  int a = 42;
+  const int *p_a = &a;
+  simplify_type<const int *>::SimpleType simplified_p_a =
+      simplify_type<const int *>::getSimplifiedValue(p_a);
+  ASSERT_EQ(p_a, simplified_p_a);
+}
+
+TEST(CastingTest, SimplifyTypeConstTypeWithPointer) {
+  int a = 42;
+  const int *p_a = &a;
+  const int *const cp_a = p_a;
+  simplify_type<const int *const>::SimpleType simplified_cp_a =
+      simplify_type<const int *const>::getSimplifiedValue(cp_a);
+  ASSERT_EQ(cp_a, simplified_cp_a);
+}
+
 TEST(CastingTest, isa) {
   bar B;
   bar &B1 = B;
