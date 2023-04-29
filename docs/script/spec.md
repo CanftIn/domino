@@ -10,7 +10,7 @@ experssion_list ::= block_expr ; experssion_list
 
 block_expr ::= Decl | "return" | Expression
 
-Decl ::= var Identifier [ Type ] = Expression
+Decl ::= var Identifier '<' Type '>' '=' Expression
 
 Type ::= < shape_list >
 
@@ -28,7 +28,7 @@ Primary ::= IdentifierExpr
 literalList ::= TensorLiteral
              |  TensorLiteral, literalList
 
-TensorLiteral ::= [ literalList ] | number
+TensorLiteral ::= '[' literalList | number ']'
 
 NumberExpr ::= number
 
