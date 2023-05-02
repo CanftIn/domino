@@ -3,6 +3,7 @@
 
 #include <domino/support/Casting.h>
 #include <domino/util/STLExtras.h>
+#include <domino/util/Macros.h>
 
 #include <optional>
 
@@ -23,7 +24,8 @@ class TypeSwitchBase {
 
   template <typename CaseT, typename CaseT2, typename... CaseTs,
             typename CallableT>
-  DerivedT Case(CallableT &&caseFn) {
+  DOMINO_ATTRIBUTE_ALWAYS_INLINE DOMINO_ATTRIBUTE_NODEBUG
+  DerivedT& Case(CallableT &&caseFn) {
     DerivedT &derived = static_cast<DerivedT &>(*this);
     return derived.template Case<CaseT>(caseFn)
         .template Case<CaseT2, CaseTs...>(caseFn);
