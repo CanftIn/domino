@@ -402,6 +402,51 @@ constexpr bool is_contained(std::initializer_list<T> Set, T Value) {
   return false;
 }
 
+/// This class provides various trait information about a callable object.
+///   * To access the number of arguments: Traits::num_args
+///   * To access the type of an argument: Traits::arg_t<Index>
+///   * To access the type of the result:  Traits::result_t
+template <typename T, bool isClass = std::is_class<T>::value>
+struct function_traits : public function_traits<decltype(&T::operator())> {};
+
+/// Overload for class function types.
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits<ReturnType (ClassType::*)(Args...) const, false> {
+  /// The number of arguments to this function.
+  enum { num_args = sizeof...(Args) };
+
+  /// The result type of this function.
+  using result_t = ReturnType;
+
+  /// The type of an argument to this function.
+  template <size_t Index>
+  using arg_t = std::tuple_element_t<Index, std::tuple<Args...>>;
+};
+/// Overload for class function types.
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits<ReturnType (ClassType::*)(Args...), false>
+    : public function_traits<ReturnType (ClassType::*)(Args...) const> {};
+/// Overload for non-class function types.
+template <typename ReturnType, typename... Args>
+struct function_traits<ReturnType (*)(Args...), false> {
+  /// The number of arguments to this function.
+  enum { num_args = sizeof...(Args) };
+
+  /// The result type of this function.
+  using result_t = ReturnType;
+
+  /// The type of an argument to this function.
+  template <size_t i>
+  using arg_t = std::tuple_element_t<i, std::tuple<Args...>>;
+};
+template <typename ReturnType, typename... Args>
+struct function_traits<ReturnType (*const)(Args...), false>
+    : public function_traits<ReturnType (*)(Args...)> {};
+/// Overload for non-class function type references.
+template <typename ReturnType, typename... Args>
+struct function_traits<ReturnType (&)(Args...), false>
+    : public function_traits<ReturnType (*)(Args...)> {};
+
 }  // namespace domino
 
 #endif  // DOMINO_UTIL_STLEXTRAS_H_

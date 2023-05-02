@@ -24,6 +24,18 @@ namespace domino {
 
 #define DOMINO_WINDOWS_PREFER_FORWARD_SLASH 0
 
+#if __has_attribute(nodebug)
+#define DOMINO_ATTRIBUTE_NODEBUG __attribute((nodebug))
+#else
+#define DOMINO_ATTRIBUTE_NODEBUG
+#endif
+
+#if __has_attribute(always_inline)
+#define DOMINO_ATTRIBUTE_ALWAYS_INLINE inline __attribute((always_inline))
+#else
+#define DOMINO_ATTRIBUTE_ALWAYS_INLINE inline
+#endif
+
 }  // namespace domino
 
 #endif  // DOMINO_UTIL_MACROS_H_
