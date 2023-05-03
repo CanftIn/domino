@@ -107,6 +107,20 @@ size_t StringRef::find_insensitive(StringRef Str, size_t From) const {
   return npos;
 }
 
+size_t StringRef::find_if(function_ref<bool(char)> F, size_t From) const {
+  StringRef S = drop_front(From);
+  while (!S.empty()) {
+    if (F(S.front())) return size() - S.size();
+    S = S.drop_front();
+  }
+  return npos;
+}
+
+size_t StringRef::find_if_not(function_ref<bool(char)> F,
+                              size_t From) const {
+  return find_if([F](char c) { return !F(c); }, From);
+}
+
 size_t StringRef::rfind_insensitive(char C, size_t From) const {
   From = std::min(From, Length);
   size_t i = From;
@@ -306,9 +320,8 @@ std::string StringRef::upper() const {
                      map_iterator(end(), toUpper));
 }
 
-static unsigned GetAutoSenseRadix(StringRef &Str) {
-  if (Str.empty())
-    return 10;
+static unsigned GetAutoSenseRadix(StringRef& Str) {
+  if (Str.empty()) return 10;
 
   if (Str.starts_with("0x") || Str.starts_with("0X")) {
     Str = Str.substr(2);
@@ -333,11 +346,10 @@ static unsigned GetAutoSenseRadix(StringRef &Str) {
   return 10;
 }
 
-bool domino::consumeUnsignedInteger(StringRef &Str, unsigned Radix,
-                                  unsigned long long &Result) {
+bool domino::consumeUnsignedInteger(StringRef& Str, unsigned Radix,
+                                    unsigned long long& Result) {
   // Autosense radix if not specified.
-  if (Radix == 0)
-    Radix = GetAutoSenseRadix(Str);
+  if (Radix == 0) Radix = GetAutoSenseRadix(Str);
 
   // Empty strings (after the radix autosense) are invalid.
   if (Str.empty()) return true;
@@ -358,31 +370,28 @@ bool domino::consumeUnsignedInteger(StringRef &Str, unsigned Radix,
 
     // If the parsed value is larger than the integer radix, we cannot
     // consume any more characters.
-    if (CharVal >= Radix)
-      break;
+    if (CharVal >= Radix) break;
 
     // Add in this character.
     unsigned long long PrevResult = Result;
     Result = Result * Radix + CharVal;
 
     // Check for overflow by shifting back and seeing if bits were lost.
-    if (Result / Radix < PrevResult)
-      return true;
+    if (Result / Radix < PrevResult) return true;
 
     Str2 = Str2.substr(1);
   }
 
   // We consider the operation a failure if no characters were consumed
   // successfully.
-  if (Str.size() == Str2.size())
-    return true;
+  if (Str.size() == Str2.size()) return true;
 
   Str = Str2;
   return false;
 }
 
-bool domino::consumeSignedInteger(StringRef &Str, unsigned Radix,
-                                long long &Result) {
+bool domino::consumeSignedInteger(StringRef& Str, unsigned Radix,
+                                  long long& Result) {
   unsigned long long ULLVal;
 
   // Handle positive strings first.

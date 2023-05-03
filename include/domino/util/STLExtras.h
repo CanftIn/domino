@@ -10,6 +10,7 @@
 #include <utility>
 
 namespace domino {
+class StringRef;
 
 template <typename T, T>
 struct SameType;
@@ -446,6 +447,79 @@ struct function_traits<ReturnType (*const)(Args...), false>
 template <typename ReturnType, typename... Args>
 struct function_traits<ReturnType (&)(Args...), false>
     : public function_traits<ReturnType (*)(Args...)> {};
+
+namespace detail {
+
+template <typename RangeT>
+using IterOfRange = decltype(adl_begin(std::declval<RangeT &>()));
+
+template <typename RangeT>
+using ValueOfRange =
+    std::remove_reference_t<decltype(*adl_begin(std::declval<RangeT &>()))>;
+
+}  // end namespace detail
+
+/// An STL-style algorithm similar to std::for_each that applies a second
+/// functor between every pair of elements.
+///
+/// This provides the control flow logic to, for example, print a
+/// comma-separated list:
+/// \code
+///   interleave(names.begin(), names.end(),
+///              [&](StringRef name) { os << name; },
+///              [&] { os << ", "; });
+/// \endcode
+template <typename ForwardIterator, typename UnaryFunctor,
+          typename NullaryFunctor,
+          typename = std::enable_if_t<
+              !std::is_constructible<StringRef, UnaryFunctor>::value &&
+              !std::is_constructible<StringRef, NullaryFunctor>::value>>
+inline void interleave(ForwardIterator begin, ForwardIterator end,
+                       UnaryFunctor each_fn, NullaryFunctor between_fn) {
+  if (begin == end) return;
+  each_fn(*begin);
+  ++begin;
+  for (; begin != end; ++begin) {
+    between_fn();
+    each_fn(*begin);
+  }
+}
+
+template <typename Container, typename UnaryFunctor, typename NullaryFunctor,
+          typename = std::enable_if_t<
+              !std::is_constructible<StringRef, UnaryFunctor>::value &&
+              !std::is_constructible<StringRef, NullaryFunctor>::value>>
+inline void interleave(const Container &c, UnaryFunctor each_fn,
+                       NullaryFunctor between_fn) {
+  interleave(c.begin(), c.end(), each_fn, between_fn);
+}
+
+/// Overload of interleave for the common case of string separator.
+template <typename Container, typename UnaryFunctor, typename StreamT,
+          typename T = detail::ValueOfRange<Container>>
+inline void interleave(const Container &c, StreamT &os, UnaryFunctor each_fn,
+                       const StringRef &separator) {
+  interleave(c.begin(), c.end(), each_fn, [&] { os << separator; });
+}
+template <typename Container, typename StreamT,
+          typename T = detail::ValueOfRange<Container>>
+inline void interleave(const Container &c, StreamT &os,
+                       const StringRef &separator) {
+  interleave(
+      c, os, [&](const T &a) { os << a; }, separator);
+}
+
+template <typename Container, typename UnaryFunctor, typename StreamT,
+          typename T = detail::ValueOfRange<Container>>
+inline void interleaveComma(const Container &c, StreamT &os,
+                            UnaryFunctor each_fn) {
+  interleave(c, os, each_fn, ", ");
+}
+template <typename Container, typename StreamT,
+          typename T = detail::ValueOfRange<Container>>
+inline void interleaveComma(const Container &c, StreamT &os) {
+  interleaveComma(c, os, [&](const T &a) { os << a; });
+}
 
 }  // namespace domino
 

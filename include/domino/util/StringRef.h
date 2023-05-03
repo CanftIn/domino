@@ -196,19 +196,10 @@ class StringRef {
   /// \returns The index of the first character satisfying \p F starting from
   /// \p From, or npos if not found.
   [[nodiscard]] size_t find_if(function_ref<bool(char)> F,
-                               size_t From = 0) const {
-    StringRef S = drop_front(From);
-    while (!S.empty()) {
-      if (F(S.front())) return size() - S.size();
-      S = S.drop_front();
-    }
-    return npos;
-  }
+                               size_t From = 0) const;
 
   [[nodiscard]] size_t find_if_not(function_ref<bool(char)> F,
-                                   size_t From = 0) const {
-    return find_if([F](char c) { return !F(c); }, From);
-  }
+                                   size_t From = 0) const;
 
   [[nodiscard]] size_t find(StringRef Str, size_t From = 0) const;
 
