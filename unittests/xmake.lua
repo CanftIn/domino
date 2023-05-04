@@ -38,7 +38,7 @@ for _, test in ipairs(all_tests(folds)) do
   end
 end
 
-if get_config("unittests") then
+if get_config("unittest_script") then
   for _, test in ipairs(all_tests({"script"})) do
     target(test[1])
     set_kind("binary")

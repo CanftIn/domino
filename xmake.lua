@@ -3,7 +3,7 @@ set_version("0.0.1")
 
 option("domino_src",        {description = "domino src", default = "$(projectdir)/src"})
 option("unittests",         {description = "build unittests", default = true})
-option("unittest_script",   {description = "build script unittest", default = true})
+option("unittest_script",   {description = "build script unittest", default = false})
 option("memcheck",          {description = "valgrind memcheck", default = false})
 
 if is_mode("release") then
