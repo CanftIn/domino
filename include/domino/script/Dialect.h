@@ -20,7 +20,7 @@ class ScriptDialect : public ::mlir::Dialect {
  public:
   ~ScriptDialect() override;
   static constexpr ::llvm::StringLiteral getDialectNamespace() {
-    return ::llvm::StringLiteral("domino-script");
+    return ::llvm::StringLiteral("domino_script");
   }
 };
 
