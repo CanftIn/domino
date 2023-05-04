@@ -16,11 +16,13 @@ message(STATUS "Project '${PROJECT_NAME}', version: '${project_version}'")
 option(DOMINO_OPT_BUILD_UNITTESTS "Build all domino unittests" ON)
 option(DOMINO_OPT_BUILD_BENCHMARK "Build all domino benchmark" OFF)
 option(DOMINO_OPT_BUILD_EXAMPLES "Build all domino examples" ON)
-option(DOMINO_OPT_BUILD_UNITTESTS_SCRIPT "Build domino script" OFF)
+option(DOMINO_OPT_BUILD_UNITTESTS_SCRIPT "Build domino script" ON)
 
 # CMake helpers:
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
+
+include(CTest)
 
 include_directories(include)
 
@@ -52,7 +54,6 @@ add_library(${STATIC_LIB_NAME} STATIC ${domino_SRCS})
 add_library(${SHARED_LIB_NAME} SHARED ${domino_SRCS})
 
 if (DOMINO_OPT_BUILD_UNITTESTS)
-  include(CTest)
   add_subdirectory(unittests #[[EXCLUDE_FROM_ALL]])
 endif()
 
