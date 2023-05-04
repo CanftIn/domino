@@ -1,10 +1,10 @@
 #ifndef DOMINO_SCRIPT_LEXER_H_
 #define DOMINO_SCRIPT_LEXER_H_
 
-#include <domino/util/StringRef.h>
-
 #include <memory>
 #include <string>
+
+#include "llvm/ADT/StringRef.h"
 
 namespace domino {
 
@@ -51,7 +51,7 @@ class Lexer {
     getNextToken();
   }
 
-  StringRef getId() {
+  ::llvm::StringRef getId() {
     assert(curTok == Token::tok_identifier &&
            "getId() called with wrong token");
     return identifierStr;
@@ -69,7 +69,7 @@ class Lexer {
   int getCol() const { return curCol; }
 
  private:
-  virtual domino::StringRef readNextLine() = 0;
+  virtual ::llvm::StringRef readNextLine() = 0;
 
   int getNextChar() {
     if (curLineBuffer.empty()) return EOF;
@@ -142,7 +142,7 @@ class Lexer {
 
   int curCol = 0;
 
-  domino::StringRef curLineBuffer = "\n";
+  ::llvm::StringRef curLineBuffer = "\n";
 };
 
 class LexerBuffer final : public Lexer {
@@ -151,11 +151,11 @@ class LexerBuffer final : public Lexer {
       : Lexer(filename), current(begin), end(end) {}
 
  private:
-  domino::StringRef readNextLine() override {
-    auto *begin = current;
+  ::llvm::StringRef readNextLine() override {
+    auto* begin = current;
     while (current <= end && *current && *current != '\n') ++current;
     if (current <= end && *current) ++current;
-    StringRef result{begin, static_cast<size_t>(current - begin)};
+    ::llvm::StringRef result{begin, static_cast<size_t>(current - begin)};
     return result;
   }
 

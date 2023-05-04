@@ -14,8 +14,9 @@
 #include <mutex>
 #include <optional>
 
-using namespace domino;
-using namespace sys;
+namespace domino {
+
+namespace sys {
 
 static std::pair<std::chrono::microseconds, std::chrono::microseconds>
 getRUsageTimes() {
@@ -335,3 +336,6 @@ unsigned domino::sys::Process::GetRandomNumber() {
 }
 
 [[noreturn]] void Process::ExitNoCleanup(int RetCode) { _Exit(RetCode); }
+
+}  // namespace sys
+}  // namespace domino

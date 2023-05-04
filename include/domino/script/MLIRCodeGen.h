@@ -21,13 +21,15 @@ class ModuleOp;
 
 }  // namespace domino
 
+namespace domino {
 namespace script {
 class ModuleAST;
 
 /// Emit IR for the given Toy moduleAST, returns a newly created MLIR module
 /// or nullptr on failure.
 ::mlir::OwningOpRef<::mlir::ModuleOp> mlirGen(::mlir::MLIRContext &context,
-                                          ModuleAST &moduleAST);
+                                              ModuleAST &moduleAST);
 }  // namespace script
+}  // namespace domino
 
 #endif  // DOMINO_SCRIPT_MLIR_CODEGEN_H_

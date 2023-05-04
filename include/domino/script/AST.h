@@ -2,15 +2,16 @@
 #define DOMINO_SCRIPT_AST_H_
 
 #include <domino/script/Lexer.h>
-#include <domino/support/Casting.h>
-#include <domino/util/ArrayRef.h>
-#include <domino/util/StringRef.h>
 
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
+
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Casting.h"
 
 namespace domino {
 
@@ -71,8 +72,10 @@ class LiteralExprAST : public ExprAST {
         values(std::move(values)),
         dims(std::move(dims)) {}
 
-  ArrayRef<std::unique_ptr<ExprAST>> getValues() const { return values; }
-  ArrayRef<int64_t> getDims() const { return dims; }
+  ::llvm::ArrayRef<std::unique_ptr<ExprAST>> getValues() const {
+    return values;
+  }
+  ::llvm::ArrayRef<int64_t> getDims() const { return dims; }
 
   static bool classof(const ExprAST* c) { return c->getKind() == Expr_Literal; }
 
@@ -83,10 +86,10 @@ class LiteralExprAST : public ExprAST {
 
 class VariableExprAST : public ExprAST {
  public:
-  VariableExprAST(Location location, StringRef name)
+  VariableExprAST(Location location, ::llvm::StringRef name)
       : ExprAST(Expr_Var, std::move(location)), name(name) {}
 
-  StringRef getName() const { return name; }
+  ::llvm::StringRef getName() const { return name; }
 
   static bool classof(const ExprAST* c) { return c->getKind() == Expr_Var; }
 
@@ -96,14 +99,14 @@ class VariableExprAST : public ExprAST {
 
 class VarDeclExprAST : public ExprAST {
  public:
-  VarDeclExprAST(Location location, StringRef name, VarType type,
+  VarDeclExprAST(Location location, ::llvm::StringRef name, VarType type,
                  std::unique_ptr<ExprAST> initVal)
       : ExprAST(Expr_VarDecl, std::move(location)),
         name(name),
         type(type),
         initVal(std::move(initVal)) {}
 
-  StringRef getName() const { return name; }
+  ::llvm::StringRef getName() const { return name; }
   ExprAST* getInitVal() const { return initVal.get(); }
   const VarType& getType() const { return type; }
 
@@ -159,8 +162,8 @@ class CallExprAST : public ExprAST {
         callee(callee),
         args(std::move(args)) {}
 
-  StringRef getCallee() const { return callee; }
-  ArrayRef<std::unique_ptr<ExprAST>> getArgs() const { return args; }
+  ::llvm::StringRef getCallee() const { return callee; }
+  ::llvm::ArrayRef<std::unique_ptr<ExprAST>> getArgs() const { return args; }
 
   static bool classof(const ExprAST* c) { return c->getKind() == Expr_Call; }
 
@@ -184,13 +187,15 @@ class PrintExprAST : public ExprAST {
 
 class PrototypeAST {
  public:
-  PrototypeAST(Location location, StringRef name,
+  PrototypeAST(Location location, ::llvm::StringRef name,
                std::vector<std::unique_ptr<VariableExprAST>> args)
       : location(std::move(location)), name(name), args(std::move(args)) {}
 
   const Location& loc() { return location; }
-  StringRef getName() const { return name; }
-  ArrayRef<std::unique_ptr<VariableExprAST>> getArgs() const { return args; }
+  ::llvm::StringRef getName() const { return name; }
+  ::llvm::ArrayRef<std::unique_ptr<VariableExprAST>> getArgs() const {
+    return args;
+  }
 
  private:
   Location location;

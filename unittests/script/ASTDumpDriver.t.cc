@@ -1,18 +1,14 @@
 #include <domino/script/Parser.h>
-#include <domino/support/ErrorOr.h>
-#include <domino/support/raw_ostream.h>
-#include <domino/util/StringRef.h>
 
 #include <fstream>
 #include <iostream>
 #include <string>
 
-using namespace domino;
-using namespace domino::script;
+#include <domino/util/StringRef.h>
 
-std::unique_ptr<script::ModuleAST> parseInputFile(StringRef buffer) {
-  LexerBuffer lexer(buffer.begin(), buffer.end(), std::string("null"));
-  Parser parser(lexer);
+std::unique_ptr<domino::script::ModuleAST> parseInputFile(::domino::StringRef buffer) {
+  domino::script::LexerBuffer lexer(buffer.begin(), buffer.end(), std::string("null"));
+  domino::script::Parser parser(lexer);
   return parser.parseModule();
 }
 
@@ -38,9 +34,9 @@ int main(int argc, char *argv[]) {
   std::cout << buffer << std::endl;
 
   file.close();
-  auto moduleAST = parseInputFile(StringRef(buffer));
+  auto moduleAST = parseInputFile(::domino::StringRef(buffer));
   if (!moduleAST) return 1;
 
-  dump(*moduleAST);
+  domino::script::dump(*moduleAST);
   return 0;
 }

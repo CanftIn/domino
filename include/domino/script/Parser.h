@@ -3,15 +3,16 @@
 
 #include <domino/script/AST.h>
 #include <domino/script/Lexer.h>
-#include <domino/support/Casting.h>
-#include <domino/support/raw_ostream.h>
-#include <domino/util/STLExtras.h>
-#include <domino/util/StringExtras.h>
 
 #include <map>
+#include <optional>
 #include <utility>
 #include <vector>
-#include <optional>
+
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace domino {
 
@@ -72,7 +73,7 @@ class Parser {
       case '}':
         return nullptr;
       default:
-        domino::errs() << "unknown token '" << lexer.getCurToken()
+        ::llvm::errs() << "unknown token '" << lexer.getCurToken()
                        << "' when expecting an expression\n";
         return nullptr;
     }
@@ -109,11 +110,11 @@ class Parser {
 
     dims.push_back(elements.size());
 
-    if (domino::any_of(elements, [](std::unique_ptr<ExprAST>& expr) {
-          return domino::isa<LiteralExprAST>(expr.get());
+    if (::llvm::any_of(elements, [](std::unique_ptr<ExprAST>& expr) {
+          return ::llvm::isa<LiteralExprAST>(expr.get());
         })) {
       auto* firstLiteral =
-          domino::dyn_cast<LiteralExprAST>(elements.front().get());
+          ::llvm::dyn_cast<LiteralExprAST>(elements.front().get());
       if (!firstLiteral)
         return parseError<ExprAST>("uniform well-nested dimensions",
                                    "inside literal expression");
@@ -122,7 +123,7 @@ class Parser {
       dims.insert(dims.end(), firstDims.begin(), firstDims.end());
 
       for (auto& expr : elements) {
-        auto* exprLiteral = domino::cast<LiteralExprAST>(expr.get());
+        auto* exprLiteral = ::llvm::cast<LiteralExprAST>(expr.get());
         if (!exprLiteral)
           return parseError<ExprAST>("uniform well-nested dimensions",
                                      "inside literal expression");
@@ -363,7 +364,7 @@ class Parser {
   template <typename R, typename T, typename U = const char*>
   std::unique_ptr<R> parseError(T&& expected, U&& context = "") {
     auto curToken = lexer.getCurToken();
-    domino::errs() << "Parse error (" << lexer.getLocation().line << ", "
+    ::llvm::errs() << "Parse error (" << lexer.getLocation().line << ", "
                    << lexer.getLocation().col << "): expected '" << expected
                    << "' " << context << " but has Token '" << curToken
                    << "'\n";

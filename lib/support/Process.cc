@@ -8,8 +8,8 @@
 
 #include <optional>
 
-using namespace domino;
-using namespace sys;
+namespace domino {
+namespace sys {
 
 std::optional<std::string> Process::FindInEnvPath(StringRef EnvName,
                                                   StringRef FileName,
@@ -65,5 +65,8 @@ bool Process::AreCoreFilesPrevented() { return coreFilesPrevented; }
 [[noreturn]] void Process::Exit(int RetCode, bool NoCleanup) {
   ::exit(RetCode);
 }
+
+}  // namespace sys
+}  // namespace domino
 
 #include "Process.inc"

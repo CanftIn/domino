@@ -16,7 +16,7 @@ message(STATUS "Project '${PROJECT_NAME}', version: '${project_version}'")
 option(DOMINO_OPT_BUILD_UNITTESTS "Build all domino unittests" ON)
 option(DOMINO_OPT_BUILD_BENCHMARK "Build all domino benchmark" OFF)
 option(DOMINO_OPT_BUILD_EXAMPLES "Build all domino examples" ON)
-option(DOMINO_OPT_BUILD_UNITTESTS_SCRIPT "Build domino script" OFF)
+option(DOMINO_OPT_BUILD_UNITTESTS_SCRIPT "Build domino script" ON)
 
 # CMake helpers:
 include(GNUInstallDirs)
@@ -29,8 +29,6 @@ include_directories(include)
 # Create the domino C++ library
 set(domino_SRCS
   lib/http/UriParser.cc
-  lib/script/AST.cc
-  lib/script/Dialect.cc
   lib/support/Error.cc
   lib/support/FormatVariadic.cc
   lib/support/NativeFormatting.cc
@@ -50,6 +48,17 @@ set(domino_SRCS
 
 set(STATIC_LIB_NAME ${PROJECT_NAME})
 set(SHARED_LIB_NAME ${PROJECT_NAME}-shared)
+
+if (DOMINO_OPT_BUILD_UNITTESTS_SCRIPT)
+  find_package(LLVM REQUIRED CONFIG)
+  find_package(MLIR REQUIRED CONFIG)
+
+  list(APPEND domino_SRCS
+    lib/script/AST.cc
+    lib/script/Dialect.cc
+    lib/script/MLIRCodeGen.cc
+  )
+endif()
 
 add_library(${STATIC_LIB_NAME} STATIC ${domino_SRCS})
 add_library(${SHARED_LIB_NAME} SHARED ${domino_SRCS})
