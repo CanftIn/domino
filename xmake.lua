@@ -22,7 +22,7 @@ set_config("cxx", "clang++")
 set_config("ld", "clang++")
 
 add_cflags("-fPIC", "-pipe")
-add_cxxflags("-fPIC", "-pipe", "-Wno-invalid-offsetof")
+add_cxxflags("-fno-rtti", "-fPIC", "-pipe", "-Wno-invalid-offsetof")
 
 includes("**/xmake.lua")
 
@@ -36,9 +36,9 @@ target("util")
     set_kind("object")
     add_files("lib/util/*.cc")
 
-target("script")
-    set_kind("object")
-    add_files("lib/script/*.cc")
+-- target("script")
+--     set_kind("object")
+--     add_files("lib/script/*.cc")
 
 target("support")
     set_kind("object")
@@ -50,5 +50,5 @@ target("domino")
     set_kind("$(kind)")
     add_deps("http")
     add_deps("util")
-    add_deps("script")
+    -- add_deps("script")
     add_deps("support")
