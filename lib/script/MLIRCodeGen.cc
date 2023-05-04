@@ -407,12 +407,12 @@ class MLIRGenImpl {
 
 }  // namespace
 
-namespace domino::script {
+namespace script {
 
 // The public API for codegen.
 mlir::OwningOpRef<mlir::ModuleOp> mlirGen(mlir::MLIRContext &context,
-                                          ModuleAST &moduleAST) {
+                                          domino::script::ModuleAST &moduleAST) {
   return MLIRGenImpl(context).mlirGen(moduleAST);
 }
 
-}  // namespace domino::script
+}  // namespace script

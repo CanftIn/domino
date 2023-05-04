@@ -19,6 +19,7 @@
 #include "mlir/Parser/Parser.h"
 
 using namespace domino::script;
+using namespace script;
 
 /// Returns a Toy AST resulting from parsing the file or a nullptr on error.
 std::unique_ptr<domino::script::ModuleAST> parseInputFile(llvm::StringRef buffer) {
@@ -35,7 +36,7 @@ int dumpMLIR(llvm::StringRef buffer) {
   auto moduleAST = parseInputFile(buffer);
   if (!moduleAST) return 6;
   mlir::OwningOpRef<mlir::ModuleOp> module =
-      domino::script::mlirGen(context, *moduleAST);
+      script::mlirGen(context, *moduleAST);
   if (!module) return 1;
 
   module->dump();
@@ -44,8 +45,8 @@ int dumpMLIR(llvm::StringRef buffer) {
 
 int main(int argc, char **argv) {
   // Register any command line options.
-  mlir::registerAsmPrinterCLOptions();
-  mlir::registerMLIRContextCLOptions();
+  //mlir::registerAsmPrinterCLOptions();
+  //mlir::registerMLIRContextCLOptions();
 
   if (argc < 2) {
     std::cerr << "Usage: " << argv[0] << " <filename>" << std::endl;

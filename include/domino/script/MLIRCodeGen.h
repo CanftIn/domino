@@ -1,6 +1,8 @@
 #ifndef DOMINO_SCRIPT_MLIR_CODEGEN_H_
 #define DOMINO_SCRIPT_MLIR_CODEGEN_H_
 
+#include <domino/script/AST.h>
+
 #include <memory>
 
 #include "mlir/IR/Attributes.h"
@@ -10,7 +12,7 @@
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Verifier.h"
 
-namespace domino {
+namespace mlir {
 
 class MLIRContext;
 
@@ -19,17 +21,15 @@ class OwningOpRef;
 
 class ModuleOp;
 
-}  // namespace domino
+}  // namespace mlir
 
-namespace domino {
 namespace script {
 class ModuleAST;
 
 /// Emit IR for the given Toy moduleAST, returns a newly created MLIR module
 /// or nullptr on failure.
-::mlir::OwningOpRef<::mlir::ModuleOp> mlirGen(::mlir::MLIRContext &context,
-                                              ModuleAST &moduleAST);
+::mlir::OwningOpRef<::mlir::ModuleOp> mlirGen(
+    ::mlir::MLIRContext &context, domino::script::ModuleAST &moduleAST);
 }  // namespace script
-}  // namespace domino
 
 #endif  // DOMINO_SCRIPT_MLIR_CODEGEN_H_
