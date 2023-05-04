@@ -38,16 +38,18 @@ for _, test in ipairs(all_tests(folds)) do
   end
 end
 
-for _, test in ipairs(all_tests({"script"})) do
-  target(test[1])
-  set_kind("binary")
-  add_files(test[2])
-  if has_config("memcheck") then
-    on_run(function(target)
-      local argv = {}
-      table.insert(argv, target:targetfile())
-      table.insert(argv, "--leak-check=full")
-      os.execv("valgrind", argv)
-    end)
+if get_config("unittests") then
+  for _, test in ipairs(all_tests({"script"})) do
+    target(test[1])
+    set_kind("binary")
+    add_files(test[2])
+    if has_config("memcheck") then
+      on_run(function(target)
+        local argv = {}
+        table.insert(argv, target:targetfile())
+        table.insert(argv, "--leak-check=full")
+        os.execv("valgrind", argv)
+      end)
+    end
   end
 end
