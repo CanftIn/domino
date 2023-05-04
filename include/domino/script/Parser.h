@@ -8,9 +8,10 @@
 #include <domino/util/STLExtras.h>
 #include <domino/util/StringExtras.h>
 
-#include <memory>
-
-#include "domino/http/UriParser.h"
+#include <map>
+#include <utility>
+#include <vector>
+#include <optional>
 
 namespace domino {
 
@@ -20,10 +21,19 @@ class Parser {
  public:
   Parser(Lexer& lexer) : lexer(lexer) {}
 
-  std::unique_ptr<ExprAST> parseModule() {
+  std::unique_ptr<ModuleAST> parseModule() {
     lexer.getNextToken();
-
+    // Parse functions one at a time and accumulate in this vector.
     std::vector<FunctionAST> functions;
+    while (auto f = parseDefinition()) {
+      functions.push_back(std::move(*f));
+      if (lexer.getCurToken() == tok_eof) break;
+    }
+    // If we didn't reach EOF, there was an error during parsing
+    if (lexer.getCurToken() != tok_eof)
+      return parseError<ModuleAST>("nothing", "at end of module");
+
+    return std::make_unique<ModuleAST>(std::move(functions));
   }
 
  private:
@@ -64,6 +74,7 @@ class Parser {
       default:
         domino::errs() << "unknown token '" << lexer.getCurToken()
                        << "' when expecting an expression\n";
+        return nullptr;
     }
   }
 
@@ -191,7 +202,7 @@ class Parser {
         if (!rhs) return nullptr;
       }
 
-      rhs = std::make_unique<BinaryExprAST>(std::move(loc), binOp,
+      lhs = std::make_unique<BinaryExprAST>(std::move(loc), binOp,
                                             std::move(lhs), std::move(rhs));
     }
   }
@@ -207,19 +218,19 @@ class Parser {
   std::unique_ptr<VarType> parseType() {
     if (lexer.getCurToken() != '<')
       return parseError<VarType>("<", "to start type declaration");
-    lexer.consume(Token('<'));
+    lexer.getNextToken();
 
     auto type = std::make_unique<VarType>();
 
     while (lexer.getCurToken() == Token::tok_number) {
       type->shape.push_back(lexer.getValue());
       lexer.getNextToken();
-      if (lexer.getCurToken() != ',') lexer.getNextToken();
+      if (lexer.getCurToken() == ',') lexer.getNextToken();
     }
 
     if (lexer.getCurToken() != '>')
       return parseError<VarType>(">", "to end type declaration");
-    lexer.consume(Token('>'));
+    lexer.getNextToken();
     return type;
   }
 
@@ -245,6 +256,7 @@ class Parser {
       do {
         std::string name(lexer.getId());
         auto loc = lexer.getLocation();
+        lexer.consume(Token::tok_identifier);
         auto decl = std::make_unique<VariableExprAST>(std::move(loc), name);
         args.push_back(std::move(decl));
         if (lexer.getCurToken() != ',') break;

@@ -123,7 +123,7 @@ class Lexer {
 
     if (lastChar == EOF) return tok_eof;
 
-    Token thisChar = lastChar;
+    Token thisChar = Token(lastChar);
     lastChar = Token(getNextChar());
     return thisChar;
   }
@@ -155,7 +155,8 @@ class LexerBuffer final : public Lexer {
     auto *begin = current;
     while (current <= end && *current && *current != '\n') ++current;
     if (current <= end && *current) ++current;
-    return domino::StringRef(begin, current - begin);
+    StringRef result{begin, static_cast<size_t>(current - begin)};
+    return result;
   }
 
   const char *current, *end;

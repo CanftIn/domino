@@ -1,6 +1,7 @@
 #include <domino/script/AST.h>
 #include <domino/support/TypeSwitch.h>
 #include <domino/support/raw_ostream.h>
+#include <domino/util/STLExtras.h>
 #include <domino/util/Twine.h>
 
 using namespace domino::script;
@@ -107,7 +108,7 @@ void printLitHelper(ExprAST *litOrNum) {
   // Now print the content, recursing on every element of the list
   domino::errs() << "[ ";
   domino::interleaveComma(literal->getValues(), domino::errs(),
-                        [&](auto &elt) { printLitHelper(elt.get()); });
+                          [&](auto &elt) { printLitHelper(elt.get()); });
   domino::errs() << "]";
 }
 
@@ -148,7 +149,8 @@ void ASTDumper::dump(BinaryExprAST *node) {
 /// recursing into each individual argument.
 void ASTDumper::dump(CallExprAST *node) {
   INDENT();
-  domino::errs() << "Call '" << node->getCallee() << "' [ " << loc(node) << "\n";
+  domino::errs() << "Call '" << node->getCallee() << "' [ " << loc(node)
+                 << "\n";
   for (auto &arg : node->getArgs()) dump(arg.get());
   indent();
   domino::errs() << "]\n";
@@ -178,7 +180,7 @@ void ASTDumper::dump(PrototypeAST *node) {
   indent();
   domino::errs() << "Params: [";
   domino::interleaveComma(node->getArgs(), domino::errs(),
-                        [](auto &arg) { domino::errs() << arg->getName(); });
+                          [](auto &arg) { domino::errs() << arg->getName(); });
   domino::errs() << "]\n";
 }
 

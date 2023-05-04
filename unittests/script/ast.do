@@ -1,5 +1,5 @@
 # this is a comment
-def multiply_transpose(a, b) {
+def f(a, b) {
   return transpose(a) * transpose(b);
 }
 
