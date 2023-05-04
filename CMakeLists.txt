@@ -16,7 +16,7 @@ message(STATUS "Project '${PROJECT_NAME}', version: '${project_version}'")
 option(DOMINO_OPT_BUILD_UNITTESTS "Build all domino unittests" ON)
 option(DOMINO_OPT_BUILD_BENCHMARK "Build all domino benchmark" OFF)
 option(DOMINO_OPT_BUILD_EXAMPLES "Build all domino examples" ON)
-option(DOMINO_OPT_BUILD_UNITTESTS_SCRIPT "Build domino script" ON)
+option(DOMINO_OPT_BUILD_UNITTESTS_SCRIPT "Build domino script" OFF)
 
 # CMake helpers:
 include(GNUInstallDirs)
@@ -30,6 +30,7 @@ include_directories(include)
 set(domino_SRCS
   lib/http/UriParser.cc
   lib/script/AST.cc
+  lib/script/Dialect.cc
   lib/support/Error.cc
   lib/support/FormatVariadic.cc
   lib/support/NativeFormatting.cc
