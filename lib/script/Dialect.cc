@@ -14,9 +14,11 @@ namespace script {
 
 ScriptDialect::ScriptDialect(::mlir::MLIRContext *context)
     : ::mlir::Dialect(getDialectNamespace(), context,
-                      ::mlir::TypeID::get<ScriptDialect>()) {
+                      ::mlir::TypeID::get<::domino::script::ScriptDialect>()) {
   initialize();
 }
+
+ScriptDialect::~ScriptDialect() = default;
 
 void ScriptDialect::initialize() {
   addOperations<::domino::script::AddOp, ::domino::script::ConstantOp,

@@ -13,13 +13,13 @@ foreach(FILE_PATH ${UNITTESTS_LIST})
   add_executable(${FILE_NAME} ${FILE_NAME}.cc)
   target_link_libraries(${FILE_NAME}
     domino
-    MLIRAnalysis
-    MLIRIR
-    MLIRParser
-    MLIRSideEffectInterfaces
-    MLIRTransforms
-    LLVMSupport
-    LLVMOption
+#    MLIRAnalysis
+#    MLIRIR
+#    MLIRParser
+#    MLIRSideEffectInterfaces
+#    MLIRTransforms
+#    LLVMSupport
+#    LLVMOption
   )
   add_test(${FILE_NAME} ${FILE_NAME})
   add_dependencies(check ${FILE_NAME})

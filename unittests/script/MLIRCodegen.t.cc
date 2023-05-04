@@ -2,10 +2,12 @@
 #include <domino/script/MLIRCodeGen.h>
 #include <domino/script/Parser.h>
 
+#include <fstream>
+#include <iostream>
 #include <memory>
+#include <string>
 
 #include "llvm/ADT/StringRef.h"
-#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/SourceMgr.h"
@@ -17,93 +19,26 @@
 #include "mlir/Parser/Parser.h"
 
 using namespace domino::script;
-namespace cl = llvm::cl;
-
-static cl::opt<std::string> inputFilename(cl::Positional,
-                                          cl::desc("<input toy file>"),
-                                          cl::init("-"),
-                                          cl::value_desc("filename"));
-
-namespace {
-enum InputType { Toy, MLIR };
-}  // namespace
-static cl::opt<enum InputType> inputType(
-    "x", cl::init(Toy), cl::desc("Decided the kind of output desired"),
-    cl::values(clEnumValN(Toy, "toy", "load the input file as a Toy source.")),
-    cl::values(clEnumValN(MLIR, "mlir",
-                          "load the input file as an MLIR file")));
-
-namespace {
-enum Action { None, DumpAST, DumpMLIR };
-}  // namespace
-static cl::opt<enum Action> emitAction(
-    "emit", cl::desc("Select the kind of output desired"),
-    cl::values(clEnumValN(DumpAST, "ast", "output the AST dump")),
-    cl::values(clEnumValN(DumpMLIR, "mlir", "output the MLIR dump")));
 
 /// Returns a Toy AST resulting from parsing the file or a nullptr on error.
-std::unique_ptr<domino::script::ModuleAST> parseInputFile(llvm::StringRef filename) {
-  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> fileOrErr =
-      llvm::MemoryBuffer::getFileOrSTDIN(filename);
-  if (std::error_code ec = fileOrErr.getError()) {
-    llvm::errs() << "Could not open input file: " << ec.message() << "\n";
-    return nullptr;
-  }
-  auto buffer = fileOrErr.get()->getBuffer();
-  LexerBuffer lexer(buffer.begin(), buffer.end(), std::string(filename));
-  Parser parser(lexer);
+std::unique_ptr<domino::script::ModuleAST> parseInputFile(llvm::StringRef buffer) {
+  domino::script::LexerBuffer lexer(buffer.begin(), buffer.end(), std::string("null"));
+  domino::script::Parser parser(lexer);
   return parser.parseModule();
 }
 
-int dumpMLIR() {
+int dumpMLIR(llvm::StringRef buffer) {
   mlir::MLIRContext context;
   // Load our Dialect in this MLIR Context.
   context.getOrLoadDialect<domino::script::ScriptDialect>();
 
-  // Handle '.toy' input to the compiler.
-  if (inputType != InputType::MLIR &&
-      !llvm::StringRef(inputFilename).endswith(".mlir")) {
-    auto moduleAST = parseInputFile(inputFilename);
-    if (!moduleAST) return 6;
-    mlir::OwningOpRef<mlir::ModuleOp> module = domino::script::mlirGen(context, *moduleAST);
-    if (!module) return 1;
-
-    module->dump();
-    return 0;
-  }
-
-  // Otherwise, the input is '.mlir'.
-  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> fileOrErr =
-      llvm::MemoryBuffer::getFileOrSTDIN(inputFilename);
-  if (std::error_code ec = fileOrErr.getError()) {
-    llvm::errs() << "Could not open input file: " << ec.message() << "\n";
-    return -1;
-  }
-
-  // Parse the input mlir.
-  llvm::SourceMgr sourceMgr;
-  sourceMgr.AddNewSourceBuffer(std::move(*fileOrErr), llvm::SMLoc());
+  auto moduleAST = parseInputFile(buffer);
+  if (!moduleAST) return 6;
   mlir::OwningOpRef<mlir::ModuleOp> module =
-      mlir::parseSourceFile<mlir::ModuleOp>(sourceMgr, &context);
-  if (!module) {
-    llvm::errs() << "Error can't load file " << inputFilename << "\n";
-    return 3;
-  }
+      domino::script::mlirGen(context, *moduleAST);
+  if (!module) return 1;
 
   module->dump();
-  return 0;
-}
-
-int dumpAST() {
-  if (inputType == InputType::MLIR) {
-    llvm::errs() << "Can't dump a Toy AST when the input is MLIR\n";
-    return 5;
-  }
-
-  auto moduleAST = parseInputFile(inputFilename);
-  if (!moduleAST) return 1;
-
-  domino::script::dump(*moduleAST);
   return 0;
 }
 
@@ -111,17 +46,28 @@ int main(int argc, char **argv) {
   // Register any command line options.
   mlir::registerAsmPrinterCLOptions();
   mlir::registerMLIRContextCLOptions();
-  cl::ParseCommandLineOptions(argc, argv, "toy compiler\n");
 
-  switch (emitAction) {
-    case Action::DumpAST:
-      return dumpAST();
-    case Action::DumpMLIR:
-      return dumpMLIR();
-    default:
-      llvm::errs()
-          << "No action specified (parsing only?), use -emit=<action>\n";
+  if (argc < 2) {
+    std::cerr << "Usage: " << argv[0] << " <filename>" << std::endl;
+    return 1;
   }
+
+  std::string filename = argv[1];
+  std::ifstream file(filename);
+
+  if (!file.is_open()) {
+    std::cerr << "Error: Unable to open file " << filename << std::endl;
+    return 1;
+  }
+
+  std::string line;
+  std::string buffer;
+  while (std::getline(file, line)) {
+    buffer += line + "\n";
+  }
+  std::cout << buffer << std::endl;
+
+  dumpMLIR(buffer);
 
   return 0;
 }

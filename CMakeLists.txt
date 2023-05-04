@@ -16,7 +16,10 @@ message(STATUS "Project '${PROJECT_NAME}', version: '${project_version}'")
 option(DOMINO_OPT_BUILD_UNITTESTS "Build all domino unittests" ON)
 option(DOMINO_OPT_BUILD_BENCHMARK "Build all domino benchmark" OFF)
 option(DOMINO_OPT_BUILD_EXAMPLES "Build all domino examples" ON)
-option(DOMINO_OPT_BUILD_UNITTESTS_SCRIPT "Build domino script" ON)
+option(DOMINO_OPT_BUILD_UNITTESTS_SCRIPT "Build domino script" OFF)
+
+# temp define: https://discourse.llvm.org/t/python-api-problem/945
+add_compile_options(-fno-rtti)
 
 # CMake helpers:
 include(GNUInstallDirs)
@@ -50,6 +53,8 @@ set(STATIC_LIB_NAME ${PROJECT_NAME})
 set(SHARED_LIB_NAME ${PROJECT_NAME}-shared)
 
 if (DOMINO_OPT_BUILD_UNITTESTS_SCRIPT)
+  set(MLIR_DIR /usr/local/lib/cmake/mlir)
+
   find_package(LLVM REQUIRED CONFIG)
   find_package(MLIR REQUIRED CONFIG)
 
@@ -58,10 +63,21 @@ if (DOMINO_OPT_BUILD_UNITTESTS_SCRIPT)
     lib/script/Dialect.cc
     lib/script/MLIRCodeGen.cc
   )
+  add_library(${STATIC_LIB_NAME} STATIC ${domino_SRCS})
+  target_link_libraries(${STATIC_LIB_NAME}
+    MLIRAnalysis
+    MLIRIR
+    MLIRParser
+    MLIRSideEffectInterfaces
+    MLIRTransforms
+    LLVMSupport
+    LLVMOption
+  )
+  #add_library(${SHARED_LIB_NAME} SHARED ${domino_SRCS})
+else()
+  add_library(${STATIC_LIB_NAME} STATIC ${domino_SRCS})
+  #add_library(${SHARED_LIB_NAME} SHARED ${domino_SRCS})
 endif()
-
-add_library(${STATIC_LIB_NAME} STATIC ${domino_SRCS})
-add_library(${SHARED_LIB_NAME} SHARED ${domino_SRCS})
 
 if (DOMINO_OPT_BUILD_UNITTESTS)
   add_subdirectory(unittests #[[EXCLUDE_FROM_ALL]])
