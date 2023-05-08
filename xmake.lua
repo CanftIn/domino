@@ -36,6 +36,10 @@ target("util")
     set_kind("object")
     add_files("lib/util/*.cc")
 
+target("rpc")
+    set_kind("object")
+    add_files("lib/rpc/concurrency/*.cc")
+
 -- target("script")
 --     set_kind("object")
 --     add_files("lib/script/*.cc")
@@ -45,6 +49,7 @@ target("support")
     add_files("lib/support/*.cc")
     add_files("lib/support/filesystem/*.cc")
     add_files("lib/support/hash/*.cc")
+
 
 target("domino")
     set_kind("$(kind)")

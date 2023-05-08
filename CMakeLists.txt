@@ -47,6 +47,8 @@ set(domino_SRCS
   lib/util/Twine.cc
   lib/util/Hashing.cc
   lib/util/StringExtras.cc
+  lib/rpc/concurrency/Mutex.cc
+  lib/rpc/transport/Socket.cc
 )
 
 set(STATIC_LIB_NAME ${PROJECT_NAME})
