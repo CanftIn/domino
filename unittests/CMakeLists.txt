@@ -15,3 +15,7 @@ add_subdirectory(support)
 add_subdirectory(util)
 add_subdirectory(meta)
 add_subdirectory(rpc/concurrency)
+
+if (DOMINO_OPT_BUILD_UNITTESTS_SCRIPT)
+  add_subdirectory(script)
+endif()

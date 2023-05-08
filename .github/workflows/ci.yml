@@ -2,9 +2,13 @@ name: ci build
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - master
+      - rpc
   pull_request:
-    branches: [ "master" ]
+    branches:
+      - master
+      - rpc
 
 jobs:
   ubuntu_build:
@@ -15,7 +19,7 @@ jobs:
       - name: setup
         run: |
          sudo apt-get update
-         sudo apt-get install cmake g++ clang libgtest-dev make valgrind
+         sudo apt-get install cmake g++ clang libgtest-dev make valgrind libbenchmark-dev
       - uses: actions/checkout@v3
       - name: Generate makefile using CMake
         run: |
@@ -39,13 +43,13 @@ jobs:
     - name: install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install cmake g++ clang libgtest-dev make valgrind
+        sudo apt-get install cmake g++ clang libgtest-dev make valgrind libbenchmark-dev
     - name: setup xmake
       uses: xmake-io/github-action-setup-xmake@v1
       with:
         xmake-version: latest
     - name: pull code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: xmake build and run unittests
       run: |
         xmake b
