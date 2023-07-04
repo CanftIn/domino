@@ -22,7 +22,6 @@ CheckOptions:
       key: readability-identifier-naming.ConstexprVariableCase,
       value: CamelCase,
     }
-  - { key: readability-identifier-naming.NamespaceCase, value: CamelCase }
   - { key: readability-identifier-naming.StructCase, value: CamelCase }
   - {
       key: readability-identifier-naming.TemplateParameterCase,
@@ -31,6 +30,7 @@ CheckOptions:
   - { key: readability-identifier-naming.TypeAliasCase, value: CamelCase }
   - { key: readability-identifier-naming.TypedefCase, value: CamelCase }
   - { key: readability-identifier-naming.UnionCase, value: CamelCase }
+  - { key: readability-identifier-naming.NamespaceCase, value: lower_case }
   - { key: readability-identifier-naming.VariableCase, value: lower_case }
   - { key: readability-identifier-naming.ParameterCase, value: lower_case }
   - { key: readability-identifier-naming.ClassMemberCase, value: lower_case }
