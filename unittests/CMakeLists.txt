@@ -14,6 +14,7 @@ add_subdirectory(http)
 add_subdirectory(support)
 add_subdirectory(util)
 add_subdirectory(meta)
+add_subdirectory(stacktrace)
 add_subdirectory(rpc/concurrency)
 
 if (DOMINO_OPT_BUILD_UNITTESTS_SCRIPT)
